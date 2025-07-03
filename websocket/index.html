@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <input type="text" id="clientId" placeholder="Enter your client ID">
+    <button onclick="connect()" id="connectButton">Connect</button>
+    <br>
+    <br>
+<div>
+    <input type="text" id="target" placeholder="Enter target name">
+    <input type="text" id="messageInput" placeholder="Enter your message">
+    <button onclick="sendMessage()">Send</button>
+</div>
+<div id="messages"></div>
+
+
+    <script>
+    let ws;
+
+    function connect() {
+        let clientIdInput = document.getElementById("clientId");
+        if (!clientIdInput.value) {
+			alert("You need an ID to enter");
+			return;
+		}
+
+        ws = new WebSocket("ws://localhost:8080/ws?id=" + clientIdInput.value);
+
+        ws.onopen = function() {
+            console.log("Connected to WebSocket server");
+        };
+
+       ws.onmessage = function (event) {
+			const messageDisplay = document.getElementById("messages");
+            const msg = JSON.parse(event.data);
+            console.log("Message received:", msg);
+            
+            messageDisplay.innerHTML += `<p><b>Message received:</b> ${msg.content}</p>`;
+        };
+
+        ws.onclose = function() {
+            console.log("WebSocket connection closed, retrying...");
+        };
+
+        ws.onerror = function(error) {
+            console.error("WebSocket error:", error);
+        };
+    }
+
+    function sendMessage() {
+        let msgInput = document.getElementById("messageInput");
+        let targetInput = document.getElementById("target");
+        let target = targetInput.value;
+        let message = msgInput.value;
+        ws.send(JSON.stringify({ targetId: target, content: message }));
+        msgInput.value = "";
+    }
+
+    /* connect(); */
+    </script>
+</body>
+</html>
