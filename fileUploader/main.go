@@ -22,6 +22,7 @@ type ApiResponse struct {
 var broadcast = make(chan string)
 
 func main() {
+
 	content, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")
 	if err != nil {
 		log.Fatalf("Failed to get subdirectory: %v\n", err)
@@ -52,13 +53,6 @@ func main() {
 
 		fs.ServeHTTP(w, r)
 	})
-
-	/* go backend.UploadsWatchDogTest() */
-	/* go func() {
-		for fileName := range fileUploads {
-			log.Printf("File uploaded: %s\n", fileName)
-		}
-	}() */
 
 	log.Println("Starting server on :8080")
 	if err := http.ListenAndServe(":8080", nil); err != nil {
