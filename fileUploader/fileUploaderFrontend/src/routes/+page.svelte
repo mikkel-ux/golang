@@ -43,9 +43,9 @@
 	}
 </script>
 
-<!-- <p>
+<p>
 	Go to <a href="/foo" class="bg-blue-600">/foo</a> to see the foo page. test
-</p> -->
+</p>
 <br />
 <section class="h-screen flex justify-center items-center">
 	<div class="bg-gray-100 p-4 rounded-lg shadow-md">

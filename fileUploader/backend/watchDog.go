@@ -1,13 +1,14 @@
-package main
+package backend
 
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
 
-func UploadsWatchDog() {
+func UploadsWatchDog(broadcast chan string) {
 	fmt.Println("Starting uploads watchdog...")
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -15,15 +16,22 @@ func UploadsWatchDog() {
 	}
 	defer watcher.Close()
 
-	done := make(chan bool)
-
 	go func() {
 		for {
 			select {
-			case event := <-watcher.Events:
-				fmt.Printf("Event: %s\n", event)
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				if event.Op&fsnotify.Create == fsnotify.Create {
+					file := strings.Split(event.Name, "\\")
+					broadcast <- file[1]
+				}
 
-			case err := <-watcher.Errors:
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
 				fmt.Printf("Error: %v\n", err)
 			}
 		}
@@ -33,5 +41,5 @@ func UploadsWatchDog() {
 		log.Fatalf("Failed to add directory to watcher: %v\n", err)
 	}
 
-	<-done
+	<-make(chan bool)
 }

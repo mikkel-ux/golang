@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -33,8 +34,11 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer file.Close()
-
-	dst, err := os.Create(fmt.Sprintf("./uploads/%d%s", time.Now().UnixNano(), filepath.Ext(fileHeader.Filename)))
+	uploadedTime := time.Now().UnixNano()
+	uploadedTimeStr := fmt.Sprintf("%d", uploadedTime)
+	name := strings.Split(fileHeader.Filename, ".")
+	fileName := name[0] + "_" + uploadedTimeStr
+	dst, err := os.Create(fmt.Sprintf("./uploads/%s%s", fileName, filepath.Ext(fileHeader.Filename)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
