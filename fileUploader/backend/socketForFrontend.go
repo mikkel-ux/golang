@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"sync"
@@ -8,12 +9,20 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader{}
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
 
 var clients = struct {
 	sync.RWMutex
 	m map[*websocket.Conn]bool
 }{m: make(map[*websocket.Conn]bool)}
+
+var firstFrontendKey *websocket.Conn
 
 func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -29,6 +38,7 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	clients.Unlock()
 
 	log.Println("Client connected")
+	log.Printf("client key %v\n", conn)
 
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
@@ -42,11 +52,17 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func HandleMessages(broadcast chan string) {
+func HandleMessages(broadcast chan File) {
 	for {
 		msg := <-broadcast
+		data, err := json.Marshal(msg)
+		if err != nil {
+			log.Printf("Failed to marshal message: %v\n", err)
+			continue
+		}
+		log.Printf("clients %d\n", len(clients.m))
 		for client := range clients.m {
-			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
+			err := client.WriteMessage(websocket.TextMessage, data)
 			if err != nil {
 				log.Printf("Failed to write message to client: %v\n", err)
 				client.Close()
@@ -55,4 +71,8 @@ func HandleMessages(broadcast chan string) {
 		log.Printf("Broadcasted message: %s\n", msg)
 		clients.RLock()
 	}
+}
+
+func HandleMessageToSpecificClient(clientCount int) {
+
 }

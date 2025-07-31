@@ -18,8 +18,9 @@ type ApiResponse struct {
 	Message string `json:"message"`
 }
 
-/* var fileUploads = make(chan string) */
-var broadcast = make(chan string)
+var broadcast = make(chan backend.File)
+
+/* var clientCount = make(chan int) */
 
 func main() {
 
@@ -36,6 +37,7 @@ func main() {
 	go backend.UploadsWatchDog(broadcast)
 
 	http.HandleFunc("/api/upload", UploadHandler)
+	http.HandleFunc("/api/files", GetUploadsHandler)
 	http.HandleFunc("/ws", backend.SocketHandler)
 
 	fs := http.FileServer(http.FS(content))

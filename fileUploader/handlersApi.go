@@ -15,6 +15,11 @@ var foo []string
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 
+type File struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -37,7 +42,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	uploadedTime := time.Now().UnixNano()
 	uploadedTimeStr := fmt.Sprintf("%d", uploadedTime)
 	name := strings.Split(fileHeader.Filename, ".")
-	fileName := name[0] + "_" + uploadedTimeStr
+	fileName := name[0] + filepath.Ext(fileHeader.Filename) + "___" + uploadedTimeStr
 	dst, err := os.Create(fmt.Sprintf("./uploads/%s%s", fileName, filepath.Ext(fileHeader.Filename)))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -65,5 +70,31 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	/* for _, file := range foo {
 		fmt.Fprintf(w, " File: %s, ", file)
 	} */
+
+}
+
+func GetUploadsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "GET" {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	files, err := os.ReadDir("./uploads")
+	if err != nil {
+		http.Error(w, "Error reading uploads directory", http.StatusInternalServerError)
+		return
+	}
+
+	var fileList []File
+	for _, file := range files {
+		fileNameSplited := strings.Split(file.Name(), "___")
+		fileList = append(fileList, File{
+			ID:   strings.Split(fileNameSplited[1], ".")[0],
+			Name: fileNameSplited[0],
+		})
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(fileList)
 
 }

@@ -8,7 +8,12 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-func UploadsWatchDog(broadcast chan string) {
+type File struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func UploadsWatchDog(broadcast chan File) {
 	fmt.Println("Starting uploads watchdog...")
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
@@ -24,8 +29,13 @@ func UploadsWatchDog(broadcast chan string) {
 					return
 				}
 				if event.Op&fsnotify.Create == fsnotify.Create {
-					file := strings.Split(event.Name, "\\")
-					broadcast <- file[1]
+					fileWithOutUploads := strings.Split(event.Name, "\\")
+					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
+					file := File{
+						ID:   strings.Split(fileNameSplited[1], ".")[0],
+						Name: fileNameSplited[0],
+					}
+					broadcast <- file
 				}
 
 			case err, ok := <-watcher.Errors:
