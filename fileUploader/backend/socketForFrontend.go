@@ -38,14 +38,20 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	clients.Unlock()
 
 	log.Println("Client connected")
-	log.Printf("client key %v\n", conn)
+	if firstFrontendKey == nil {
+		firstFrontendKey = conn
+		log.Println("First frontend client connected")
+	}
+	HandleMessageToSpecificClient(len(clients.m))
 
 	for {
 		if _, _, err := conn.ReadMessage(); err != nil {
 			log.Printf("Failed to read message from client: %v\n", err)
+			conn.Close()
 			clients.Lock()
 			delete(clients.m, conn)
 			clients.Unlock()
+			HandleMessageToSpecificClient(len(clients.m))
 			break
 		}
 	}
@@ -74,5 +80,16 @@ func HandleMessages(broadcast chan File) {
 }
 
 func HandleMessageToSpecificClient(clientCount int) {
-
+	data, err := json.Marshal(clientCount)
+	if err != nil {
+		log.Printf("Failed to marshal client count: %v\n", err)
+		return
+	}
+	if firstFrontendKey != nil {
+		err := firstFrontendKey.WriteMessage(websocket.TextMessage, data)
+		if err != nil {
+			log.Printf("Failed to write message to first client: %v\n", err)
+			firstFrontendKey.Close()
+		}
+	}
 }

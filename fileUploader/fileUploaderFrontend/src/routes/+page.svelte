@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { preventDefault } from 'svelte/legacy';
 	import { onDestroy, onMount } from 'svelte';
+	import { createWebSocketModuleRunnerTransport } from 'vite/module-runner';
 
 	let socket: WebSocket;
 
@@ -11,20 +12,26 @@
 		name: string;
 	};
 	let filesArray = $state<file[]>([]);
+	let clientsCount = $state<number>(0);
 
 	onMount(() => {
 		socket = new WebSocket('ws://localhost:8080/ws');
 		socket.onopen = () => {
 			console.log('WebSocket connection established');
+			socket.send(JSON.stringify({ key: 'serverFrontend' }));
 		};
 
 		socket.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			const newFile: file = {
-				id: data.id,
-				name: data.name
-			};
-			filesArray = [...filesArray, newFile];
+			if (!data.id || !data.name) {
+				clientsCount = data;
+			} else {
+				const newFile: file = {
+					id: data.id,
+					name: data.name
+				};
+				filesArray = [...filesArray, newFile];
+			}
 		};
 	});
 
@@ -54,9 +61,9 @@
 </script>
 
 <section class="h-screen flex w-screen justify-center gap-5">
-	<p>
+	<!-- <p>
 		Go to <a href="/foo" class="bg-blue-600">/foo</a> to see the foo page. test
-	</p>
+	</p> -->
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-auto h-full mb-4">
 		{#if filesArray.length === 0}
@@ -74,4 +81,5 @@
 			</div>
 		{/each}
 	</div>
+	<p>client connected: {clientsCount}</p>
 </section>

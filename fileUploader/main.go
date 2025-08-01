@@ -20,14 +20,12 @@ type ApiResponse struct {
 
 var broadcast = make(chan backend.File)
 
-/* var clientCount = make(chan int) */
-
 func main() {
 
-	content, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")
+	/* content, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")
 	if err != nil {
 		log.Fatalf("Failed to get subdirectory: %v\n", err)
-	}
+	} */
 
 	if err := backend.CreateUploadsDir(); err != nil {
 		panic(fmt.Sprintf("Failed to create uploads directory: %v\n", err))
@@ -40,20 +38,33 @@ func main() {
 	http.HandleFunc("/api/files", GetUploadsHandler)
 	http.HandleFunc("/ws", backend.SocketHandler)
 
-	fs := http.FileServer(http.FS(content))
+	svelteFS, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")
+	if err != nil {
+		log.Fatalf("Failed to get subdirectory: %v\n", err)
+	}
+	fileServer := http.FileServer(http.FS(svelteFS))
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		filePath := r.URL.Path
+
+		cleandPath := path.Clean(filePath)
+
 		if filePath == "/" {
-			filePath = "/index.html"
+			http.ServeFileFS(w, r, svelteFS, "index.html")
+			return
 		}
 
-		_, err := content.Open(path.Clean(filePath[1:]))
+		_, err := svelteFS.Open(cleandPath[1:])
 		if os.IsNotExist(err) {
-			r.URL.Path = "/index.html"
+			http.ServeFileFS(w, r, svelteFS, "index.html")
+			return
+		} else if err != nil {
+			log.Printf("Error opening file %s: %v", filePath, err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
 		}
+		fileServer.ServeHTTP(w, r)
 
-		fs.ServeHTTP(w, r)
 	})
 
 	log.Println("Starting server on :8080")
