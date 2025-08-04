@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { preventDefault } from 'svelte/legacy';
 	import { onDestroy, onMount } from 'svelte';
-	import { createWebSocketModuleRunnerTransport } from 'vite/module-runner';
 
 	let socket: WebSocket;
 
@@ -18,7 +17,7 @@
 		socket = new WebSocket('ws://localhost:8080/ws');
 		socket.onopen = () => {
 			console.log('WebSocket connection established');
-			socket.send(JSON.stringify({ key: 'serverFrontend' }));
+			socket.send('serverFrontend');
 		};
 
 		socket.onmessage = (event) => {
@@ -58,12 +57,35 @@
 			console.log('WebSocket connection closed');
 		}
 	});
+
+	const foo = () => {
+		try {
+			const response = fetch('/api/test');
+			console.log('Response from /api/test:', response);
+		} catch (error) {
+			console.error('Error calling /api/test:', error);
+		}
+	};
+
+	const deleteFile = async (fileId: string) => {
+		try {
+			const response = await fetch(`/api/delete/${fileId}`, {
+				method: 'DELETE'
+			});
+			if (!response.ok) {
+				throw new Error('Failed to delete file');
+			}
+			filesArray = filesArray.filter((file) => file.id !== fileId);
+			console.log(`File with ID ${fileId} deleted successfully`);
+			console.log(response);
+		} catch (error) {
+			console.error('Error deleting file:', error);
+		}
+	};
 </script>
 
 <section class="h-screen flex w-screen justify-center gap-5">
-	<!-- <p>
-		Go to <a href="/foo" class="bg-blue-600">/foo</a> to see the foo page. test
-	</p> -->
+	<button onclick={foo}>click me</button>
 
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-auto h-full mb-4">
 		{#if filesArray.length === 0}
@@ -71,6 +93,12 @@
 		{/if}
 		{#each filesArray as file (file.id)}
 			<div class="bg-gray-100 p-4 rounded-lg shadow-md w-full">
+				<button
+					class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+					onclick={() => deleteFile(file.id)}
+				>
+					X
+				</button>
 				<p>File ID: {file.id}</p>
 				<p>File Name: {file.name}</p>
 				<p>

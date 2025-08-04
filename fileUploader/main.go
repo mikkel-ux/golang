@@ -21,12 +21,6 @@ type ApiResponse struct {
 var broadcast = make(chan backend.File)
 
 func main() {
-
-	/* content, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")
-	if err != nil {
-		log.Fatalf("Failed to get subdirectory: %v\n", err)
-	} */
-
 	if err := backend.CreateUploadsDir(); err != nil {
 		panic(fmt.Sprintf("Failed to create uploads directory: %v\n", err))
 	}
@@ -36,6 +30,8 @@ func main() {
 
 	http.HandleFunc("/api/upload", UploadHandler)
 	http.HandleFunc("/api/files", GetUploadsHandler)
+	http.HandleFunc("/api/delete/{id}", DeleteFileHandler)
+	http.HandleFunc("/api/test", FooTest)
 	http.HandleFunc("/ws", backend.SocketHandler)
 
 	svelteFS, err := fs.Sub(embeddedFiles, "fileUploaderFrontend/build")

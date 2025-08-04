@@ -38,24 +38,31 @@ func SocketHandler(w http.ResponseWriter, r *http.Request) {
 	clients.Unlock()
 
 	log.Println("Client connected")
-	if firstFrontendKey == nil {
-		firstFrontendKey = conn
-		log.Println("First frontend client connected")
-	}
 	HandleMessageToSpecificClient(len(clients.m))
 
 	for {
-		if _, _, err := conn.ReadMessage(); err != nil {
+		_, message, err := conn.ReadMessage()
+		if err != nil {
 			log.Printf("Failed to read message from client: %v\n", err)
 			conn.Close()
 			clients.Lock()
 			delete(clients.m, conn)
 			clients.Unlock()
-			HandleMessageToSpecificClient(len(clients.m))
+			if firstFrontendKey == conn {
+				firstFrontendKey = nil
+			} else {
+				HandleMessageToSpecificClient(len(clients.m))
+			}
 			break
 		}
+		log.Printf("Received message: %s\n", message)
+		if string(message) == "serverFrontend" {
+			if firstFrontendKey == nil {
+				firstFrontendKey = conn
+				HandleMessageToSpecificClient(len(clients.m))
+			}
+		}
 	}
-
 }
 
 func HandleMessages(broadcast chan File) {
