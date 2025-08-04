@@ -145,13 +145,11 @@ func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	/* fileID := r.URL.Query().Get("id")
+	fileID := r.URL.Query().Get("id")
 	if fileID == "" {
 		http.Error(w, "File ID is required", http.StatusBadRequest)
 		return
-	} */
-	vars := mux.Vars(r)
-	fileID := vars["id"]
+	}
 
 	for _, file := range files {
 		if strings.Contains(file.Name(), fileID) {
