@@ -36,7 +36,7 @@
 
 	onMount(async () => {
 		try {
-			const response = await fetch('/api/files');
+			const response = await fetch('/api/upload');
 			if (!response.ok) {
 				throw new Error('Failed to fetch files');
 			}
@@ -58,18 +58,9 @@
 		}
 	});
 
-	const foo = () => {
-		try {
-			const response = fetch('/api/test');
-			console.log('Response from /api/test:', response);
-		} catch (error) {
-			console.error('Error calling /api/test:', error);
-		}
-	};
-
 	const deleteFile = async (fileId: string) => {
 		try {
-			const response = await fetch(`/api/delete/${fileId}`, {
+			const response = await fetch(`/api/upload/${fileId}`, {
 				method: 'DELETE'
 			});
 			if (!response.ok) {
@@ -85,8 +76,6 @@
 </script>
 
 <section class="h-screen flex w-screen justify-center gap-5">
-	<button onclick={foo}>click me</button>
-
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-auto h-full mb-4">
 		{#if filesArray.length === 0}
 			<p class="text-gray-500">No files uploaded yet.</p>

@@ -1,18 +1,16 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-)
 
-var foo []string
+	"github.com/gin-gonic/gin"
+)
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 
@@ -29,67 +27,40 @@ func SplitFileName(file os.DirEntry) File {
 	}
 }
 
-func UploadHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	r.Body = http.MaxBytesReader(w, r.Body, MAX_UPLOAD_SIZE)
-	if err := r.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
-		http.Error(w, "The uploaded file is too big", http.StatusBadRequest)
-		return
-	}
-
-	file, fileHeader, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, "Error retrieving the file", http.StatusBadRequest)
-		return
-	}
-
-	defer file.Close()
-	uploadedTime := time.Now().UnixNano()
-	uploadedTimeStr := fmt.Sprintf("%d", uploadedTime)
-	name := strings.Split(fileHeader.Filename, ".")
-	fileName := name[0] + filepath.Ext(fileHeader.Filename) + "___" + uploadedTimeStr
-	dst, err := os.Create(fmt.Sprintf("./uploads/%s%s", fileName, filepath.Ext(fileHeader.Filename)))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	defer dst.Close()
-
-	_, err = io.Copy(dst, file)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	foo = append(foo, dst.Name())
-
-	/* fmt.Fprintf(w, "File uploaded successfully: %s", fileHeader.Filename) */
-	response := ApiResponse{
-		Message: fmt.Sprintf("File uploaded successfully: %s", fileHeader.Filename),
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-
-	/* for _, file := range foo {
-		fmt.Fprintf(w, " File: %s, ", file)
-	} */
-
-}
-
-func GetUploadsHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
+func findFileByID(fileID string) (string, bool, error) {
 	files, err := os.ReadDir("./uploads")
 	if err != nil {
-		http.Error(w, "Error reading uploads directory", http.StatusInternalServerError)
+		return "", false, fmt.Errorf("error reading uploads directory: %v", err)
+	}
+
+	for _, file := range files {
+		if strings.Contains(file.Name(), fileID) {
+			return strings.Join([]string{"./uploads", file.Name()}, "/"), true, nil
+		}
+	}
+	return "", false, fmt.Errorf("file with ID %s not found", fileID)
+}
+
+func UploadHandler(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
+	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The uploaded file is too big"})
+		return
+	}
+
+	file, _ := c.FormFile("file")
+	uploadedTime := time.Now().UnixNano()
+	uploadedTimeStr := fmt.Sprintf("%d", uploadedTime)
+	name := strings.Split(file.Filename, ".")
+	newFileName := name[0] + filepath.Ext(file.Filename) + "___" + uploadedTimeStr + filepath.Ext(file.Filename)
+	c.SaveUploadedFile(file, fmt.Sprintf("./uploads/%s", newFileName))
+	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("File uploaded successfully: %s", newFileName)})
+}
+
+func GetUploadsHandler(c *gin.Context) {
+	files, err := os.ReadDir("./uploads")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error reading uploads directory"})
 		return
 	}
 
@@ -97,81 +68,63 @@ func GetUploadsHandler(w http.ResponseWriter, r *http.Request) {
 	for _, file := range files {
 		fileList = append(fileList, SplitFileName(file))
 	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(fileList)
-
+	c.JSON(http.StatusOK, fileList)
 }
 
-func FooTest(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	files, err := os.ReadDir("./uploads")
-	if err != nil {
-		http.Error(w, "Error reading uploads directory", http.StatusInternalServerError)
-		return
-	}
-
-	/* foo = strings[0].Contains(files[0].Name(), "1753944929580453400") */
-	for _, file := range files {
-		if strings.Contains(file.Name(), "1753944929580453400") {
-			log.Printf("Found file: %s\n", file.Name())
-		}
-	}
-
-	/* log.Printf("Files in uploads directory: %v\n", files[0].Name()) */
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(foo)
-
-}
-
-func DeleteFileHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "DELETE" {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	fileToDelete := ""
-	found := false
-
-	files, err := os.ReadDir("./uploads")
-	if err != nil {
-		http.Error(w, "Error reading uploads directory", http.StatusInternalServerError)
-		return
-	}
-
-	fileID := r.URL.Query().Get("id")
+func DeleteFileHandler(c *gin.Context) {
+	fileID := c.Param("id")
 	if fileID == "" {
-		http.Error(w, "File ID is required", http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
 		return
 	}
 
-	for _, file := range files {
-		if strings.Contains(file.Name(), fileID) {
-			fileToDelete = strings.Join([]string{"./uploads", file.Name()}, "/")
-			log.Printf("found file")
-			found = true
-			break
-		}
+	fileToDelete, found, err := findFileByID(fileID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding file: %v", err)})
+		return
 	}
 
 	if !found {
-		http.Error(w, "File not found", http.StatusNotFound)
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
 		return
 	}
 
 	err = os.Remove(fileToDelete)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error deleting file: %v", err), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error deleting file: %v", err)})
 		return
 	}
-	log.Printf("File deleted successfully: %s\n", fileToDelete)
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(ApiResponse{Message: "File deleted successfully"})
+	log.Printf("File deleted successfully: %s\n", fileToDelete)
+	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
+}
+
+func DownloadFileHandler(c *gin.Context) {
+	fileID := c.Param("id")
+	if fileID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
+		return
+	}
+
+	filePath, found, err := findFileByID(fileID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding file: %v", err)})
+		return
+	}
+
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error getting file info: %v", err)})
+		return
+	}
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileInfo.Name()))
+	c.Header("Content-Type", "application/octet-stream")
+	c.Header("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
+	c.FileAttachment(filePath, fileInfo.Name())
 }

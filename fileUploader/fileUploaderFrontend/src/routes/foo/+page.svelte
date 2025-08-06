@@ -19,14 +19,33 @@
 
 		socket.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			console.log('Received data from server:', data);
-			console.log('File ID:', data.id);
-			console.log('File Name:', data.name);
-			const date = new Date(data.id / 1000000);
-			console.log('File Date:', date.toLocaleString());
-
-			/* console.log('Message from server:', event.data); */
+			if (!data.id || !data.name) {
+				return;
+			} else {
+				const newFile: file = {
+					id: data.id,
+					name: data.name
+				};
+				filesArray = [...filesArray, newFile];
+			}
 		};
+	});
+
+	onMount(async () => {
+		try {
+			const response = await fetch('/api/upload');
+			if (!response.ok) {
+				throw new Error('Failed to fetch files');
+			}
+			const files: file[] = await response.json();
+			if (files.length === 0) {
+				console.log('No files found');
+			} else {
+				filesArray = files;
+			}
+		} catch (error) {
+			console.error('Error fetching files:', error);
+		}
 	});
 
 	async function handleSubmit(event: SubmitEvent) {
@@ -60,9 +79,36 @@
 			console.log('WebSocket connection closed');
 		}
 	});
+
+	const downloadFile = async (fileId: string, fileName: string) => {
+		try {
+			const response = await fetch(`/api/upload/${fileId}`, {
+				method: 'GET'
+			});
+			if (!response.ok) {
+				throw new Error('Failed to download file');
+			} else {
+				const blob = await response.blob();
+				const url = window.URL.createObjectURL(blob);
+				console.log(url);
+
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = fileName;
+				document.body.appendChild(a);
+				a.click();
+				console.log(a);
+				document.body.removeChild(a);
+
+				window.URL.revokeObjectURL(url);
+			}
+		} catch (error) {
+			console.error('Error downloading file:', error);
+		}
+	};
 </script>
 
-<section class="h-screen flex w-screen justify-center gap-5">
+<section class="h-screen grid grid-rows-[auto_1fr] grid-cols-1 gap-4 p-4 m-4">
 	<div class="bg-gray-100 p-4 rounded-lg shadow-md">
 		<form
 			class="flex flex-col gap-2 justify-center items-center text-center"
@@ -74,5 +120,27 @@
 			<input type="file" name="file" multiple bind:files={fileInput} />
 			<button class="hover:bg-cyan-800 bg-blue-600 p-5" type="submit">Submit</button>
 		</form>
+	</div>
+	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-auto h-full mb-4">
+		{#if filesArray.length === 0}
+			<p class="text-gray-500">No files uploaded yet.</p>
+		{/if}
+		{#each filesArray as file (file.id)}
+			<div class="bg-gray-100 p-4 rounded-lg shadow-md w-full">
+				<button
+					class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+					onclick={() => downloadFile(file.id, file.name)}
+				>
+					Download
+				</button>
+				<p>File ID: {file.id}</p>
+				<p>File Name: {file.name}</p>
+				<p>
+					File Date: {new Date(Number(file.id) / 1000000).toLocaleString('en-US', {
+						hour12: false
+					})}
+				</p>
+			</div>
+		{/each}
 	</div>
 </section>
