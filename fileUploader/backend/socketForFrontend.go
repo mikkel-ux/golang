@@ -66,7 +66,7 @@ func SocketHandler(c *gin.Context) {
 	}
 }
 
-func HandleMessages(broadcast chan File) {
+func HandleMessages(broadcast chan FileEvent) {
 	for {
 		msg := <-broadcast
 		data, err := json.Marshal(msg)
@@ -80,15 +80,24 @@ func HandleMessages(broadcast chan File) {
 			if err != nil {
 				log.Printf("Failed to write message to client: %v\n", err)
 				client.Close()
+				clients.Lock()
+				delete(clients.m, client)
+				clients.Unlock()
+				if firstFrontendKey == client {
+					firstFrontendKey = nil
+				}
 			}
 		}
-		log.Printf("Broadcasted message: %s\n", msg)
-		clients.RLock()
 	}
 }
 
 func HandleMessageToSpecificClient(clientCount int) {
-	data, err := json.Marshal(clientCount)
+	fileEvent := FileEvent{
+		File:           File{},
+		FileWasRemoved: "",
+		ClientsCount:   &clientCount,
+	}
+	data, err := json.Marshal(fileEvent)
 	if err != nil {
 		log.Printf("Failed to marshal client count: %v\n", err)
 		return

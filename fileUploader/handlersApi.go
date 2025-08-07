@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -94,8 +93,6 @@ func DeleteFileHandler(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error deleting file: %v", err)})
 		return
 	}
-
-	log.Printf("File deleted successfully: %s\n", fileToDelete)
 	c.JSON(http.StatusOK, gin.H{"message": "File deleted successfully"})
 }
 

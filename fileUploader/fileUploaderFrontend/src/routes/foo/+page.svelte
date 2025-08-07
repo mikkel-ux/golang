@@ -19,14 +19,24 @@
 
 		socket.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			if (!data.id || !data.name) {
+			if (data.clientsCount !== null) {
+				return;
+			} else if (data.fileWasRemoved !== '') {
+				const test = filesArray.find((file) => file.id === data.fileWasRemoved);
+				if (!test) {
+					console.log('File not found in the array:', data.fileWasRemoved);
+					return;
+				}
+
+				filesArray = filesArray.filter((file) => file.id !== data.fileWasRemoved);
 				return;
 			} else {
 				const newFile: file = {
-					id: data.id,
-					name: data.name
+					id: data.file.id,
+					name: data.file.name
 				};
 				filesArray = [...filesArray, newFile];
+				return;
 			}
 		};
 	});

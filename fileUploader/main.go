@@ -15,7 +15,7 @@ type ApiResponse struct {
 	Message string `json:"message"`
 }
 
-var broadcast = make(chan backend.File)
+var broadcast = make(chan backend.FileEvent)
 
 func main() {
 	if err := backend.CreateUploadsDir(); err != nil {
