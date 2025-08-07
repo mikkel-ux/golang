@@ -88,8 +88,7 @@ func DeleteFileHandler(c *gin.Context) {
 		return
 	}
 
-	err = os.Remove(fileToDelete)
-	if err != nil {
+	if os.Remove(fileToDelete) != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error deleting file: %v", err)})
 		return
 	}

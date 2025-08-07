@@ -61,9 +61,31 @@
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		const file = fileInput?.[0];
-		let formData = new FormData();
 
+		const xhr = new XMLHttpRequest();
+
+		xhr.upload.addEventListener('progress', (e) => {
+			if (e.lengthComputable) {
+				const percentComplete = (e.loaded / e.total) * 100;
+				/* progress = percentComplete; */
+				console.log(`Upload progress: ${percentComplete}%`);
+			}
+		});
+
+		xhr.onload = () => {
+			if (xhr.status === 200) {
+				console.log('File uploaded successfully:', xhr.responseText);
+			}
+		};
+
+		let formData = new FormData();
 		formData.append('file', file);
+
+		xhr.open('POST', '/api/upload');
+		xhr.send(formData);
+
+		/* 
+
 
 		try {
 			const response = await fetch('/api/upload', {
@@ -80,7 +102,7 @@
 			console.log('File uploaded successfully:', result.message);
 		} catch (error) {
 			console.error('Error uploading file:', error);
-		}
+		} */
 	}
 
 	onDestroy(() => {

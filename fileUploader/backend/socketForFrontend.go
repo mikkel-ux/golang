@@ -56,7 +56,6 @@ func SocketHandler(c *gin.Context) {
 			}
 			break
 		}
-		log.Printf("Received message: %s\n", message)
 		if string(message) == "serverFrontend" {
 			if firstFrontendKey == nil {
 				firstFrontendKey = conn
@@ -79,13 +78,6 @@ func HandleMessages(broadcast chan FileEvent) {
 			err := client.WriteMessage(websocket.TextMessage, data)
 			if err != nil {
 				log.Printf("Failed to write message to client: %v\n", err)
-				client.Close()
-				clients.Lock()
-				delete(clients.m, client)
-				clients.Unlock()
-				if firstFrontendKey == client {
-					firstFrontendKey = nil
-				}
 			}
 		}
 	}
