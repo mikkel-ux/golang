@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fileUploader/API"
 	"fileUploader/backend"
 	"fmt"
 	"log"
@@ -28,10 +29,10 @@ func main() {
 
 	api := r.Group("/api")
 	{
-		api.POST("/upload", UploadHandler)
-		api.GET("/upload", GetUploadsHandler)
-		api.GET("/upload/:id", DownloadFileHandler)
-		api.DELETE("/upload/:id", DeleteFileHandler)
+		api.POST("/upload", API.UploadHandler)
+		api.GET("/upload", API.GetUploadsHandler)
+		api.GET("/upload/:id", API.DownloadFileHandler)
+		api.DELETE("/upload/:id", API.DeleteFileHandler)
 	}
 
 	r.GET("/ws", backend.SocketHandler)
