@@ -33,6 +33,8 @@ func main() {
 		api.GET("/upload", API.GetUploadsHandler)
 		api.GET("/upload/:id", API.DownloadFileHandler)
 		api.DELETE("/upload/:id", API.DeleteFileHandler)
+		api.GET("/video/:id", API.StreamVideoHandler)
+		api.GET("/test/:id", API.TestHandler)
 	}
 
 	r.GET("/ws", backend.SocketHandler)

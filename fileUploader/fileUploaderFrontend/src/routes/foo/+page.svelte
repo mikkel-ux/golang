@@ -10,6 +10,7 @@
 		name: string;
 	};
 	let filesArray = $state<file[]>([]);
+	let showModal = $state<boolean>(false);
 
 	onMount(() => {
 		socket = new WebSocket('ws://localhost:8080/ws');
@@ -138,7 +139,18 @@
 			console.error('Error downloading file:', error);
 		}
 	};
+
+	const test = async (id: string) => {
+		const response = await fetch(`/api/test/${id}`);
+		if (!response.ok) {
+			throw new Error('Failed to fetch test');
+		}
+		const result = await response.json();
+		console.log('Test result:', result);
+	};
 </script>
+
+<button onclick={() => (showModal = true)}>click me</button>
 
 <section class="h-screen grid grid-rows-[auto_1fr] grid-cols-1 gap-4 p-4 m-4">
 	<div class="bg-gray-100 p-4 rounded-lg shadow-md">
@@ -165,6 +177,7 @@
 				>
 					Download
 				</button>
+				<button onclick={() => test(file.id)}> open file </button>
 				<p>File ID: {file.id}</p>
 				<p>File Name: {file.name}</p>
 				<p>
@@ -175,4 +188,34 @@
 			</div>
 		{/each}
 	</div>
+	<!-- <video controls autoplay muted>
+		<source src="/api/video/1754634936816589600" type="video/mp4" />
+		<track
+			kind="captions"
+			src="/api/video/1754634936816589600/captions.vtt"
+			srclang="en"
+			label="English"
+		/>
+	</video> -->
 </section>
+{#if showModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+		<button
+			class="absolute top-4 right-4 text-white cursor-pointer"
+			onclick={() => (showModal = false)}
+		>
+			close
+		</button>
+		<div class="bg-white p-6 rounded-lg shadow-lg">
+			<video controls autoplay class="w-full h-auto">
+				<source src="/api/video/1754643211783830900" type="video/mp4" />
+				<track
+					kind="captions"
+					src="/api/video/1754643211783830900/captions.vtt"
+					srclang="en"
+					label="English"
+				/>
+			</video>
+		</div>
+	</div>
+{/if}

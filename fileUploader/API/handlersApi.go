@@ -2,6 +2,7 @@ package API
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -9,6 +10,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/h2non/filetype"
 )
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
@@ -53,6 +55,7 @@ func UploadHandler(c *gin.Context) {
 	name := strings.Split(file.Filename, ".")
 	newFileName := name[0] + filepath.Ext(file.Filename) + "___" + uploadedTimeStr + filepath.Ext(file.Filename)
 	c.SaveUploadedFile(file, fmt.Sprintf("./uploads/%s", newFileName))
+
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("File uploaded successfully: %s", newFileName)})
 }
 
@@ -123,4 +126,97 @@ func DownloadFileHandler(c *gin.Context) {
 	c.Header("Content-Type", "application/octet-stream")
 	c.Header("Content-Length", fmt.Sprintf("%d", fileInfo.Size()))
 	c.FileAttachment(filePath, fileInfo.Name())
+}
+
+func StreamVideoHandler(c *gin.Context) {
+	fileID := c.Param("id")
+	if fileID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
+		return
+	}
+
+	filePath, found, err := findFileByID(fileID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding file: %v", err)})
+		return
+	}
+
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error opening file: %v", err)})
+		return
+	}
+	defer file.Close()
+
+	c.Header("Content-Type", "video/mp4")
+	c.Header("Accept-Ranges", "bytes")
+	c.Header("Cache-Control", "no-cache")
+	c.File(filePath)
+}
+
+func TestHandler(c *gin.Context) {
+	fileID := c.Param("id")
+	if fileID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
+		return
+	}
+
+	filePath, found, err := findFileByID(fileID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("Error finding file: %v", err)})
+		return
+	}
+
+	if !found {
+		c.JSON(http.StatusNotFound, gin.H{"error": "File not found"})
+		return
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		fmt.Printf("Error opening file: %v\n", err)
+		return
+	}
+	defer file.Close()
+
+	head := make([]byte, 512)
+	/* file.Read(head) */
+	n, err := file.Read(head)
+	if err != nil && err != io.EOF {
+		fmt.Printf("Error reading file: %v\n", err)
+		return
+	}
+
+	head = head[:n]
+
+	if filetype.IsVideo(head) {
+		fmt.Println("File is an video")
+	} else if filetype.IsImage(head) {
+		fmt.Println("file is an image")
+	} else if filetype.IsAudio(head) {
+		fmt.Println("file is an audio")
+	} else if filetype.IsDocument(head) {
+		fmt.Println("file is a document")
+	} else if filetype.IsArchive(head) {
+		fmt.Println("file is an archive")
+	} else if IsTextFile(file.Name(), head) {
+		fmt.Println("file is a text file")
+	} else {
+		fmt.Println("file is an unknown type")
+	}
+}
+
+func IsTextFile(filename string, content []byte) bool {
+	// Check extension first (fast path)
+	if filepath.Ext(filename) == ".txt" {
+		return true
+	}
+
+	// Verify content when extension missing/wrong
+	return false
 }
