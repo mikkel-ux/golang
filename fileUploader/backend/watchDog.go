@@ -9,8 +9,9 @@ import (
 )
 
 type File struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Extension string `json:"extension"`
 }
 
 type FileEvent struct {
@@ -38,8 +39,9 @@ func UploadsWatchDog(broadcast chan FileEvent) {
 					fileWithOutUploads := strings.Split(event.Name, "\\")
 					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
 					file := File{
-						ID:   strings.Split(fileNameSplited[1], ".")[0],
-						Name: fileNameSplited[0],
+						ID:        strings.Split(fileNameSplited[1], ".")[0],
+						Name:      fileNameSplited[0],
+						Extension: strings.Split(fileNameSplited[1], ".")[1],
 					}
 					fileEvent := FileEvent{
 						File:           file,

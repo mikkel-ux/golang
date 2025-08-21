@@ -22,6 +22,9 @@ func main() {
 	if err := backend.CreateUploadsDir(); err != nil {
 		panic(fmt.Sprintf("Failed to create uploads directory: %v\n", err))
 	}
+	if err := backend.CreateUserDir(); err != nil {
+		panic(fmt.Sprintf("Failed to create user directory: %v\n", err))
+	}
 	r := gin.Default()
 
 	go backend.HandleMessages(broadcast)
@@ -35,6 +38,9 @@ func main() {
 		api.DELETE("/upload/:id", API.DeleteFileHandler)
 		api.GET("/video/:id", API.StreamVideoHandler)
 		api.GET("/test/:id", API.TestHandler)
+		api.POST("/user", API.CreateUserHandler)
+		api.POST("/login", API.LoginHandler)
+		api.GET("/test", API.TestAuthHandler)
 	}
 
 	r.GET("/ws", backend.SocketHandler)

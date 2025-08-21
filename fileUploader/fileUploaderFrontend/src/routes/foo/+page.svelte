@@ -8,9 +8,11 @@
 	type file = {
 		id: string;
 		name: string;
+		extension: string;
 	};
 	let filesArray = $state<file[]>([]);
 	let showModal = $state<boolean>(false);
+	let videoId = $state<string>('');
 
 	onMount(() => {
 		socket = new WebSocket('ws://localhost:8080/ws');
@@ -34,7 +36,8 @@
 			} else {
 				const newFile: file = {
 					id: data.file.id,
-					name: data.file.name
+					name: data.file.name,
+					extension: data.file.extension
 				};
 				filesArray = [...filesArray, newFile];
 				return;
@@ -43,8 +46,13 @@
 	});
 
 	onMount(async () => {
+		const token = localStorage.getItem('token');
 		try {
-			const response = await fetch('/api/upload');
+			const response = await fetch('/api/upload', {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
 			if (!response.ok) {
 				throw new Error('Failed to fetch files');
 			}
@@ -82,7 +90,10 @@
 		let formData = new FormData();
 		formData.append('file', file);
 
+		const token = localStorage.getItem('token');
+
 		xhr.open('POST', '/api/upload');
+		xhr.setRequestHeader('Authorization', `Bearer ${token}`);
 		xhr.send(formData);
 
 		/* 
@@ -114,9 +125,13 @@
 	});
 
 	const downloadFile = async (fileId: string, fileName: string) => {
+		const token = localStorage.getItem('token');
 		try {
 			const response = await fetch(`/api/upload/${fileId}`, {
-				method: 'GET'
+				method: 'GET',
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
 			});
 			if (!response.ok) {
 				throw new Error('Failed to download file');
@@ -140,17 +155,35 @@
 		}
 	};
 
-	const test = async (id: string) => {
-		const response = await fetch(`/api/test/${id}`);
-		if (!response.ok) {
-			throw new Error('Failed to fetch test');
-		}
+	const openVideoModal = async (file: file) => {
+		videoId = file.id;
+		showModal = true;
+	};
+
+	const test = async () => {
+		const user = {
+			userName: 'testuser',
+			password: 'testpassword'
+		};
+
+		const response = await fetch('/api/user', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(user)
+		});
 		const result = await response.json();
-		console.log('Test result:', result);
+
+		if (!response.ok) {
+			throw new Error('Failed to create user');
+		}
+
+		console.log('User created successfully:', result);
+		/* token = result.token; */
+		/* tokenTest(); */
 	};
 </script>
-
-<button onclick={() => (showModal = true)}>click me</button>
 
 <section class="h-screen grid grid-rows-[auto_1fr] grid-cols-1 gap-4 p-4 m-4">
 	<div class="bg-gray-100 p-4 rounded-lg shadow-md">
@@ -161,8 +194,16 @@
 			method="post"
 			onsubmit={handleSubmit}
 		>
-			<input type="file" name="file" multiple bind:files={fileInput} />
-			<button class="hover:bg-cyan-800 bg-blue-600 p-5" type="submit">Submit</button>
+			<input
+				type="file"
+				name="file"
+				multiple
+				bind:files={fileInput}
+				class="border p-2 rounded-lg w-full max-w-md text-center"
+			/>
+			<button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600" type="submit"
+				>Submit</button
+			>
 		</form>
 	</div>
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-auto h-full mb-4">
@@ -171,13 +212,21 @@
 		{/if}
 		{#each filesArray as file (file.id)}
 			<div class="bg-gray-100 p-4 rounded-lg shadow-md w-full">
-				<button
-					class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-					onclick={() => downloadFile(file.id, file.name)}
-				>
-					Download
-				</button>
-				<button onclick={() => test(file.id)}> open file </button>
+				{#if ['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(file.extension)}
+					<button
+						onclick={() => openVideoModal(file)}
+						class="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900"
+					>
+						open file
+					</button>
+				{:else}
+					<button
+						class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+						onclick={() => downloadFile(file.id, file.name)}
+					>
+						Download
+					</button>
+				{/if}
 				<p>File ID: {file.id}</p>
 				<p>File Name: {file.name}</p>
 				<p>
@@ -188,15 +237,6 @@
 			</div>
 		{/each}
 	</div>
-	<!-- <video controls autoplay muted>
-		<source src="/api/video/1754634936816589600" type="video/mp4" />
-		<track
-			kind="captions"
-			src="/api/video/1754634936816589600/captions.vtt"
-			srclang="en"
-			label="English"
-		/>
-	</video> -->
 </section>
 {#if showModal}
 	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -208,10 +248,10 @@
 		</button>
 		<div class="bg-white p-6 rounded-lg shadow-lg">
 			<video controls autoplay class="w-full h-auto">
-				<source src="/api/video/1754643211783830900" type="video/mp4" />
+				<source src={`/api/video/${videoId}`} type="video/mp4" />
 				<track
 					kind="captions"
-					src="/api/video/1754643211783830900/captions.vtt"
+					src={`/api/video/${videoId}/captions.vtt`}
 					srclang="en"
 					label="English"
 				/>

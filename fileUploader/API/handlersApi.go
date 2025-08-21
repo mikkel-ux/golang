@@ -16,15 +16,17 @@ import (
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 
 type File struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID        string `json:"id"`
+	Name      string `json:"name"`
+	Extension string `json:"extension"`
 }
 
 func SplitFileName(file os.DirEntry) File {
 	fileNameSplited := strings.Split(file.Name(), "___")
 	return File{
-		ID:   strings.Split(fileNameSplited[1], ".")[0],
-		Name: fileNameSplited[0],
+		ID:        strings.Split(fileNameSplited[1], ".")[0],
+		Name:      fileNameSplited[0],
+		Extension: strings.Split(fileNameSplited[1], ".")[1],
 	}
 }
 
@@ -43,6 +45,11 @@ func findFileByID(fileID string) (string, bool, error) {
 }
 
 func UploadHandler(c *gin.Context) {
+	token := c.GetHeader("Authorization")
+	if err := VavifyToken(token); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
 	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "The uploaded file is too big"})
@@ -100,6 +107,11 @@ func DeleteFileHandler(c *gin.Context) {
 
 func DownloadFileHandler(c *gin.Context) {
 	fileID := c.Param("id")
+	token := c.GetHeader("Authorization")
+	if err := VavifyToken(token); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 	if fileID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
 		return
@@ -130,6 +142,11 @@ func DownloadFileHandler(c *gin.Context) {
 
 func StreamVideoHandler(c *gin.Context) {
 	fileID := c.Param("id")
+	token := c.GetHeader("Authorization")
+	if err := VavifyToken(token); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 	if fileID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
 		return
