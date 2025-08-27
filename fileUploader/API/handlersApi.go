@@ -50,11 +50,11 @@ func UploadHandler(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
+	/* c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
 	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "The uploaded file is too big"})
 		return
-	}
+	} */
 
 	file, _ := c.FormFile("file")
 	uploadedTime := time.Now().UnixNano()
@@ -142,11 +142,13 @@ func DownloadFileHandler(c *gin.Context) {
 
 func StreamVideoHandler(c *gin.Context) {
 	fileID := c.Param("id")
-	token := c.GetHeader("Authorization")
+	/* token := c.Query("token")
 	if err := VavifyToken(token); err != nil {
+		fmt.Println("Invalid token:", token)
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
+	fmt.Println("token:", token) */
 	if fileID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
 		return
