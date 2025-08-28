@@ -142,13 +142,6 @@ func DownloadFileHandler(c *gin.Context) {
 
 func StreamVideoHandler(c *gin.Context) {
 	fileID := c.Param("id")
-	/* token := c.Query("token")
-	if err := VavifyToken(token); err != nil {
-		fmt.Println("Invalid token:", token)
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-	fmt.Println("token:", token) */
 	if fileID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "File ID is required"})
 		return
