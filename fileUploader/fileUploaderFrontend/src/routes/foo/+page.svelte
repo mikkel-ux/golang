@@ -46,7 +46,10 @@
 	});
 
 	onMount(async () => {
-		const token = localStorage.getItem('token');
+		const token = document.cookie
+			.split('; ')
+			.find((row) => row.startsWith('token='))
+			?.split('=')[1];
 		try {
 			const response = await fetch('/api/upload', {
 				headers: {
@@ -90,7 +93,10 @@
 		let formData = new FormData();
 		formData.append('file', file);
 
-		const token = localStorage.getItem('token');
+		const token = document.cookie
+			.split('; ')
+			.find((row) => row.startsWith('token='))
+			?.split('=')[1];
 
 		xhr.open('POST', '/api/upload');
 		xhr.setRequestHeader('Authorization', `Bearer ${token}`);
@@ -125,7 +131,10 @@
 	});
 
 	const downloadFile = async (fileId: string, fileName: string) => {
-		const token = localStorage.getItem('token');
+		const token = document.cookie
+			.split('; ')
+			.find((row) => row.startsWith('token='))
+			?.split('=')[1];
 		try {
 			const response = await fetch(`/api/upload/${fileId}`, {
 				method: 'GET',

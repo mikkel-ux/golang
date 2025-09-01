@@ -23,7 +23,7 @@
 
 		if (response.ok) {
 			const result = await response.json();
-			localStorage.setItem('token', result.token);
+			document.cookie = `token=${result.token}; expires=${new Date(result.expiresAt * 1000).toUTCString()};`;
 			console.log('Login successful:', result);
 		} else {
 			console.error('Login failed');
@@ -33,7 +33,7 @@
 		password = '';
 	};
 
-	const createUser = async () => {
+	/* const createUser = async () => {
 		const user = {
 			userName: userName,
 			password: password
@@ -59,21 +59,7 @@
 
 		userName = '';
 		password = '';
-	};
-
-	const tokenTest = async () => {
-		const response = await fetch('/api/test', {
-			headers: {
-				Authorization: `Bearer ${token}`
-			}
-		});
-		const result = await response.json();
-
-		if (!response.ok) {
-			throw new Error('Unauthorized');
-		}
-		console.log('User created successfully:', result);
-	};
+	}; */
 </script>
 
 <section class="h-screen p-4 m-4 flex justify-center items-center">
@@ -83,17 +69,18 @@
 			<input type="password" bind:value={password} placeholder="Password" required />
 			<button type="submit">Login</button> <br />
 			<div class="grid grid-cols-3 gap-2 mt-4">
-				<button type="button" onclick={createUser} class="ml-2 bg-blue-500 hover:bg-blue-700"
-					>Create User</button
-				>
-				<button type="button" onclick={tokenTest} class="ml-2 bg-blue-500 hover:bg-blue-700"
+				<!-- <button type="button" onclick={createUser} class="ml-2 bg-blue-500 hover:bg-blue-700"
+					>Sign Up</button
+				> -->
+				<a href="/signup">Sign Up</a>
+				<!-- <button type="button" onclick={tokenTest} class="ml-2 bg-blue-500 hover:bg-blue-700"
 					>Token Test</button
 				>
 				<button
 					type="button"
 					onclick={() => (token = '')}
 					class="ml-2 bg-blue-500 hover:bg-blue-700">Clear Token</button
-				>
+				> -->
 			</div>
 		</form>
 	</div>

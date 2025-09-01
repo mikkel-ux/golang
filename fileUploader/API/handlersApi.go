@@ -46,7 +46,7 @@ func findFileByID(fileID string) (string, bool, error) {
 
 func UploadHandler(c *gin.Context) {
 	token := c.GetHeader("Authorization")
-	if err := VavifyToken(token); err != nil {
+	if err := ValidateTokenFunc(token); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
@@ -108,7 +108,7 @@ func DeleteFileHandler(c *gin.Context) {
 func DownloadFileHandler(c *gin.Context) {
 	fileID := c.Param("id")
 	token := c.GetHeader("Authorization")
-	if err := VavifyToken(token); err != nil {
+	if err := ValidateTokenFunc(token); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}

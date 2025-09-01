@@ -22,16 +22,17 @@ type Test struct {
 
 var secretKey = []byte("your_secret_key")
 
-func createToken(username string) (string, error) {
+func createToken(username string) (string, int64, error) {
+	expiresAt := time.Now().Add(time.Hour * 24).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		"exp":      expiresAt,
 	})
 	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
-	return tokenString, nil
+	return tokenString, expiresAt, nil
 }
 
 func verifyToken(tokenString string) error {
@@ -113,20 +114,29 @@ func LoginHandler(c *gin.Context) {
 				c.JSON(401, gin.H{"error": "Invalid password"})
 				return
 			}
-			token, err := createToken(u.UserName)
+			token, expiresAt, err := createToken(u.UserName)
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
 			}
-			c.JSON(200, gin.H{"message": "Login successful", "token": token})
+			c.JSON(200, gin.H{"message": "Login successful", "token": token, "expiresAt": expiresAt})
 			return
 		}
 	}
 
 }
 
-func VavifyToken(tokenString string) error {
+func ValidateTokenHandler(c *gin.Context) {
+	tokenString := c.GetHeader("Authorization")
 	fmt.Println("tokenString:", tokenString)
+	if err := ValidateTokenFunc(tokenString); err != nil {
+		c.JSON(401, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Token is valid"})
+}
+
+func ValidateTokenFunc(tokenString string) error {
 	if tokenString == "" {
 		return fmt.Errorf("no token provided")
 	}
