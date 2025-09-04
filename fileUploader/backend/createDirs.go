@@ -5,28 +5,26 @@ import (
 	"os"
 )
 
-func CreateUploadsDir() error {
-	checkDir, err := os.Stat("./uploads")
+func CreateDir() error {
+	checkUploadsDir, err := os.Stat("./uploads")
 	if err != nil && os.IsNotExist(err) {
-		checkDir = nil
+		checkUploadsDir = nil
 	}
 
-	if checkDir == nil {
+	if checkUploadsDir == nil {
 		err = os.Mkdir("./uploads", os.ModePerm)
 		if err != nil {
 			log.Fatalf("Failed to create uploads directory: %v\n", err)
 			return err
 		}
 	}
-	return nil
-}
 
-func CreateUserDir() error {
-	checkDir, err := os.Stat("./users")
+	checkUsersDir, err := os.Stat("./users")
 	if err != nil && os.IsNotExist(err) {
-		checkDir = nil
+		checkUsersDir = nil
 	}
-	if checkDir == nil {
+
+	if checkUsersDir == nil {
 		err = os.Mkdir("./users", os.ModePerm)
 		if err != nil {
 			log.Fatalf("Failed to create users directory: %v\n", err)
@@ -45,5 +43,18 @@ func CreateUserDir() error {
 			return err
 		}
 	}
+
+	checkTempDir, err := os.Stat("./temp")
+	if err != nil && os.IsNotExist(err) {
+		checkTempDir = nil
+	}
+	if checkTempDir == nil {
+		err = os.Mkdir("./temp", os.ModePerm)
+		if err != nil {
+			log.Fatalf("Failed to create temp directory: %v\n", err)
+			return err
+		}
+	}
+
 	return nil
 }

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { redirect } from '@sveltejs/kit';
+	import { goto } from '$app/navigation';
 
 	let userName = $state<string>('');
 	let password = $state<string>('');
@@ -25,6 +27,7 @@
 			const result = await response.json();
 			document.cookie = `token=${result.token}; expires=${new Date(result.expiresAt * 1000).toUTCString()};`;
 			console.log('Login successful:', result);
+			goto('/foo');
 		} else {
 			console.error('Login failed');
 		}
@@ -69,18 +72,7 @@
 			<input type="password" bind:value={password} placeholder="Password" required />
 			<button type="submit">Login</button> <br />
 			<div class="grid grid-cols-3 gap-2 mt-4">
-				<!-- <button type="button" onclick={createUser} class="ml-2 bg-blue-500 hover:bg-blue-700"
-					>Sign Up</button
-				> -->
 				<a href="/signup">Sign Up</a>
-				<!-- <button type="button" onclick={tokenTest} class="ml-2 bg-blue-500 hover:bg-blue-700"
-					>Token Test</button
-				>
-				<button
-					type="button"
-					onclick={() => (token = '')}
-					class="ml-2 bg-blue-500 hover:bg-blue-700">Clear Token</button
-				> -->
 			</div>
 		</form>
 	</div>

@@ -19,11 +19,14 @@ type ApiResponse struct {
 var broadcast = make(chan backend.FileEvent)
 
 func main() {
-	if err := backend.CreateUploadsDir(); err != nil {
+	/* if err := backend.CreateUploadsDir(); err != nil {
 		panic(fmt.Sprintf("Failed to create uploads directory: %v\n", err))
 	}
 	if err := backend.CreateUserDir(); err != nil {
 		panic(fmt.Sprintf("Failed to create user directory: %v\n", err))
+	} */
+	if err := backend.CreateDir(); err != nil {
+		panic(fmt.Sprintf("Failed to create directories: %v\n", err))
 	}
 	r := gin.Default()
 

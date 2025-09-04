@@ -34,3 +34,4 @@ go.work.sum
 
 fileUploader/uploads
 fileUploader/users
+fileUploader/temp

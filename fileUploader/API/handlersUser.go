@@ -16,10 +16,6 @@ type User struct {
 	Password string `json:"password"`
 }
 
-type Test struct {
-	Users []User `json:"users"`
-}
-
 var secretKey = []byte("your_secret_key")
 
 func createToken(username string) (string, int64, error) {
@@ -82,6 +78,14 @@ func CreateUserHandler(c *gin.Context) {
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
+
+	for _, u := range users {
+		if u.UserName == user.UserName {
+			c.JSON(400, gin.H{"error": "User already exists"})
+			return
+		}
+	}
+
 	users = append(users, user)
 	updated, _ := json.MarshalIndent(users, "", " ")
 

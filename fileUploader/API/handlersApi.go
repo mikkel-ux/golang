@@ -3,8 +3,10 @@ package API
 import (
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -24,9 +26,9 @@ type File struct {
 func SplitFileName(file os.DirEntry) File {
 	fileNameSplited := strings.Split(file.Name(), "___")
 	return File{
-		ID:        strings.Split(fileNameSplited[1], ".")[0],
+		ID:        strings.Split(fileNameSplited[2], ".")[0],
 		Name:      fileNameSplited[0],
-		Extension: strings.Split(fileNameSplited[1], ".")[1],
+		Extension: strings.Split(fileNameSplited[2], ".")[1],
 	}
 }
 
@@ -44,26 +46,59 @@ func findFileByID(fileID string) (string, bool, error) {
 	return "", false, fmt.Errorf("file with ID %s not found", fileID)
 }
 
+/*
+c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
+
+	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "The uploaded file is too big"})
+		return
+	}
+*/
+//TODO add file type to file name
 func UploadHandler(c *gin.Context) {
 	token := c.GetHeader("Authorization")
 	if err := ValidateTokenFunc(token); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	/* c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, MAX_UPLOAD_SIZE)
-	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "The uploaded file is too big"})
-		return
-	} */
 
 	file, _ := c.FormFile("file")
 	uploadedTime := time.Now().UnixNano()
 	uploadedTimeStr := fmt.Sprintf("%d", uploadedTime)
-	name := strings.Split(file.Filename, ".")
-	newFileName := name[0] + filepath.Ext(file.Filename) + "___" + uploadedTimeStr + filepath.Ext(file.Filename)
-	c.SaveUploadedFile(file, fmt.Sprintf("./uploads/%s", newFileName))
+	fileName := strings.ReplaceAll(file.Filename, " ", "_")
+	contentType := strings.ReplaceAll(file.Header.Get("Content-Type"), "/", "__")
+	fmt.Println(contentType)
+	newFileName := fileName + "___" + contentType + "___" + uploadedTimeStr + filepath.Ext(file.Filename)
+
+	fmt.Println("file.Filename:", file.Header.Get("Content-Type"))
+
+	isVideo := strings.HasPrefix(file.Header.Get("Content-Type"), "video/")
+	if isVideo {
+		if err := MoveMetaDataAndFileToUploads(file, newFileName, c); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+	} else {
+		c.SaveUploadedFile(file, fmt.Sprintf("./uploads/%s", newFileName))
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": fmt.Sprintf("File uploaded successfully: %s", newFileName)})
+}
+
+func MoveMetaDataAndFileToUploads(file *multipart.FileHeader, newFileName string, c *gin.Context) error {
+	tempPath := fmt.Sprintf("./temp/%s", newFileName)
+	uploadPath := fmt.Sprintf("./uploads/%s", newFileName)
+	c.SaveUploadedFile(file, tempPath)
+
+	cmd := exec.Command("ffmpeg", "-i", tempPath,
+		"-c:v", "copy", "-c:a", "copy", "-movflags", "+faststart",
+		uploadPath)
+	err := cmd.Run()
+	if err != nil {
+		return fmt.Errorf("error moving file to uploads: %v", err)
+	}
+	os.Remove(tempPath)
+
+	return nil
 }
 
 func GetUploadsHandler(c *gin.Context) {
@@ -165,10 +200,17 @@ func StreamVideoHandler(c *gin.Context) {
 	}
 	defer file.Close()
 
-	c.Header("Content-Type", "video/mp4")
+	/* c.Header("Content-Type", "video/mp4")
 	c.Header("Accept-Ranges", "bytes")
 	c.Header("Cache-Control", "no-cache")
-	c.File(filePath)
+	c.File(filePath) */
+
+	stat, err := file.Stat()
+	if err != nil {
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": "Could not obtain file size"})
+		return
+	}
+	http.ServeContent(c.Writer, c.Request, file.Name(), stat.ModTime(), file)
 }
 
 func TestHandler(c *gin.Context) {

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	let userName = $state<string>('');
 	let password = $state<string>('');
 
@@ -19,6 +20,7 @@
 			if (response.ok) {
 				const result = await response.json();
 				console.log('User created successfully:', result);
+				goto('/login');
 			} else {
 				console.error('Failed to create user');
 			}
@@ -31,15 +33,15 @@
 	};
 </script>
 
-<h1>Sign Up</h1>
-<form onsubmit={createUser}>
-	<label>
-		Username:
-		<input type="text" bind:value={userName} required />
-	</label>
-	<label>
-		Password:
-		<input type="password" bind:value={password} required />
-	</label>
-	<button type="submit">Sign Up</button>
-</form>
+<section class="h-screen p-4 m-4 flex justify-center items-center">
+	<div class="bg-white p-6 rounded-lg shadow-lg">
+		<form onsubmit={createUser}>
+			<input type="text" bind:value={userName} placeholder="Username" required />
+			<input type="password" bind:value={password} placeholder="Password" required />
+			<button type="submit">Sign Up</button> <br />
+			<div class="grid grid-cols-3 gap-2 mt-4">
+				<a href="/login">login</a>
+			</div>
+		</form>
+	</div>
+</section>

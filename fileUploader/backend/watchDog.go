@@ -33,15 +33,17 @@ func UploadsWatchDog(broadcast chan FileEvent) {
 			select {
 			case event, ok := <-watcher.Events:
 				if !ok {
+					fmt.Println("File watcher closed")
 					return
 				}
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					fileWithOutUploads := strings.Split(event.Name, "\\")
+					fmt.Println("File created1:", fileWithOutUploads[1])
 					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
 					file := File{
-						ID:        strings.Split(fileNameSplited[1], ".")[0],
+						ID:        strings.Split(fileNameSplited[2], ".")[0],
 						Name:      fileNameSplited[0],
-						Extension: strings.Split(fileNameSplited[1], ".")[1],
+						Extension: strings.Split(fileNameSplited[2], ".")[1],
 					}
 					fileEvent := FileEvent{
 						File:           file,
@@ -53,10 +55,9 @@ func UploadsWatchDog(broadcast chan FileEvent) {
 				if event.Op&fsnotify.Remove == fsnotify.Remove {
 					fileWithOutUploads := strings.Split(event.Name, "\\")
 					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
-					log.Printf("File removed: %s\n", fileWithOutUploads[1])
 					FileEvent := FileEvent{
 						File:           File{},
-						FileWasRemoved: strings.Split(fileNameSplited[1], ".")[0],
+						FileWasRemoved: strings.Split(fileNameSplited[2], ".")[0],
 						ClientsCount:   nil,
 					}
 					broadcast <- FileEvent
