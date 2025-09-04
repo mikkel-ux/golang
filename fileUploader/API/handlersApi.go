@@ -1,6 +1,7 @@
 package API
 
 import (
+	"fileUploader/models"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -17,18 +18,20 @@ import (
 
 const MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 
-type File struct {
+/* type File struct {
 	ID        string `json:"id"`
 	Name      string `json:"name"`
 	Extension string `json:"extension"`
-}
+	FileType  string `json:"fileType"`
+} */
 
-func SplitFileName(file os.DirEntry) File {
+func SplitFileName(file os.DirEntry) models.File {
 	fileNameSplited := strings.Split(file.Name(), "___")
-	return File{
+	return models.File{
 		ID:        strings.Split(fileNameSplited[2], ".")[0],
 		Name:      fileNameSplited[0],
 		Extension: strings.Split(fileNameSplited[2], ".")[1],
+		FileType:  fileNameSplited[1],
 	}
 }
 
@@ -108,7 +111,7 @@ func GetUploadsHandler(c *gin.Context) {
 		return
 	}
 
-	var fileList []File
+	var fileList []models.File
 	for _, file := range files {
 		fileList = append(fileList, SplitFileName(file))
 	}

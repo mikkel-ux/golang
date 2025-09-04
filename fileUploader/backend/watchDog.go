@@ -5,19 +5,15 @@ import (
 	"log"
 	"strings"
 
+	"fileUploader/models"
+
 	"github.com/fsnotify/fsnotify"
 )
 
-type File struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	Extension string `json:"extension"`
-}
-
 type FileEvent struct {
-	File           File   `json:"file"`
-	FileWasRemoved string `json:"fileWasRemoved"`
-	ClientsCount   *int   `json:"clientsCount"`
+	File           models.File `json:"file"`
+	FileWasRemoved string      `json:"fileWasRemoved"`
+	ClientsCount   *int        `json:"clientsCount"`
 }
 
 func UploadsWatchDog(broadcast chan FileEvent) {
@@ -38,12 +34,12 @@ func UploadsWatchDog(broadcast chan FileEvent) {
 				}
 				if event.Op&fsnotify.Create == fsnotify.Create {
 					fileWithOutUploads := strings.Split(event.Name, "\\")
-					fmt.Println("File created1:", fileWithOutUploads[1])
 					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
-					file := File{
+					file := models.File{
 						ID:        strings.Split(fileNameSplited[2], ".")[0],
 						Name:      fileNameSplited[0],
 						Extension: strings.Split(fileNameSplited[2], ".")[1],
+						FileType:  fileNameSplited[1],
 					}
 					fileEvent := FileEvent{
 						File:           file,
@@ -56,7 +52,7 @@ func UploadsWatchDog(broadcast chan FileEvent) {
 					fileWithOutUploads := strings.Split(event.Name, "\\")
 					fileNameSplited := strings.Split(fileWithOutUploads[1], "___")
 					FileEvent := FileEvent{
-						File:           File{},
+						File:           models.File{},
 						FileWasRemoved: strings.Split(fileNameSplited[2], ".")[0],
 						ClientsCount:   nil,
 					}

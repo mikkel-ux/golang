@@ -2,6 +2,7 @@ package backend
 
 import (
 	"encoding/json"
+	"fileUploader/models"
 	"log"
 	"net/http"
 	"sync"
@@ -85,7 +86,7 @@ func HandleMessages(broadcast chan FileEvent) {
 
 func HandleMessageToSpecificClient(clientCount int) {
 	fileEvent := FileEvent{
-		File:           File{},
+		File:           models.File{},
 		FileWasRemoved: "",
 		ClientsCount:   &clientCount,
 	}
