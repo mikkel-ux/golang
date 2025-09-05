@@ -14,6 +14,7 @@
 	let filesArray = $state<file[]>([]);
 	let showModal = $state<boolean>(false);
 	let videoId = $state<string>('');
+	let selectedFileId = $state<string | null>(null);
 
 	onMount(() => {
 		socket = new WebSocket('ws://localhost:8080/ws');
@@ -172,7 +173,19 @@
 	};
 
 	const test2 = (fileType: string) => {
-		return fileType.toLowerCase().includes('video');
+		const type = fileType.toLowerCase();
+		console.log(type.includes('video'));
+
+		if (type.includes('video')) {
+			return true;
+		} else if (type.includes('text')) {
+			return true;
+		} else if (type.includes('application__pdf')) {
+			return true;
+		} else {
+			return false;
+		}
+		/* return fileType.toLowerCase().includes('video'); */
 	};
 </script>
 
