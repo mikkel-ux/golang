@@ -40,10 +40,8 @@ func main() {
 		api.GET("/upload/:id", API.DownloadFileHandler)
 		api.DELETE("/upload/:id", API.DeleteFileHandler)
 		api.GET("/video/:id", API.StreamVideoHandler)
-		api.GET("/test/:id", API.TestHandler)
 		api.POST("/user", API.CreateUserHandler)
 		api.POST("/login", API.LoginHandler)
-		api.GET("/test", API.TestAuthHandler)
 		api.GET("/validate", API.ValidateTokenHandler)
 	}
 

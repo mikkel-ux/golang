@@ -151,19 +151,3 @@ func ValidateTokenFunc(tokenString string) error {
 	}
 	return nil
 }
-
-func TestAuthHandler(c *gin.Context) {
-	tokenString := c.GetHeader("Authorization")
-	fmt.Println("tokenString:", tokenString)
-	if tokenString == "" {
-		c.JSON(401, gin.H{"error": "No token provided"})
-		return
-	}
-	tokenString = tokenString[len("Bearer "):]
-
-	if err := verifyToken(tokenString); err != nil {
-		c.JSON(401, gin.H{"error": err.Error()})
-		return
-	}
-	c.JSON(200, gin.H{"message": "Token is valid"})
-}

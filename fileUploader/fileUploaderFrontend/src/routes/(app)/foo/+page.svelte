@@ -9,6 +9,7 @@
 		id: string;
 		name: string;
 		extension: string;
+		fileType?: string;
 	};
 	let filesArray = $state<file[]>([]);
 	let showModal = $state<boolean>(false);
@@ -37,7 +38,8 @@
 				const newFile: file = {
 					id: data.file.id,
 					name: data.file.name,
-					extension: data.file.extension
+					extension: data.file.extension,
+					fileType: data.file.fileType
 				};
 				filesArray = [...filesArray, newFile];
 				return;
@@ -169,28 +171,8 @@
 		showModal = true;
 	};
 
-	const test = async () => {
-		const user = {
-			userName: 'testuser',
-			password: 'testpassword'
-		};
-
-		const response = await fetch('/api/user', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(user)
-		});
-		const result = await response.json();
-
-		if (!response.ok) {
-			throw new Error('Failed to create user');
-		}
-
-		console.log('User created successfully:', result);
-		/* token = result.token; */
-		/* tokenTest(); */
+	const test2 = (fileType: string) => {
+		return fileType.toLowerCase().includes('video');
 	};
 </script>
 
@@ -221,7 +203,7 @@
 		{/if}
 		{#each filesArray as file (file.id)}
 			<div class="bg-gray-100 p-4 rounded-lg shadow-md w-full">
-				{#if ['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(file.extension)}
+				{#if test2(file.fileType || '')}
 					<button
 						onclick={() => openVideoModal(file)}
 						class="bg-blue-800 text-white px-4 py-2 rounded hover:bg-blue-900"
@@ -238,6 +220,7 @@
 				{/if}
 				<p>File ID: {file.id}</p>
 				<p>File Name: {file.name}</p>
+				<p>File Type: {file.fileType}</p>
 				<p>
 					File Date: {new Date(Number(file.id) / 1000000).toLocaleString('en-US', {
 						hour12: false
