@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import FileModal from '$lib/components/FileModal.svelte';
 
 	let socket: WebSocket;
 
@@ -187,6 +188,10 @@
 		}
 		/* return fileType.toLowerCase().includes('video'); */
 	};
+
+	const setShowModal = (value: boolean) => {
+		showModal = value;
+	};
 </script>
 
 <section class="h-screen grid grid-rows-[auto_1fr] grid-cols-1 gap-4 p-4 m-4">
@@ -244,23 +249,5 @@
 	</div>
 </section>
 {#if showModal}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-		<button
-			class="absolute top-4 right-4 text-white cursor-pointer"
-			onclick={() => (showModal = false)}
-		>
-			close
-		</button>
-		<div class="bg-white p-6 rounded-lg shadow-lg">
-			<video controls autoplay class="w-full h-auto">
-				<source src={`/api/video/${videoId}`} type="video/mp4" />
-				<track
-					kind="captions"
-					src={`/api/video/${videoId}/captions.vtt`}
-					srclang="en"
-					label="English"
-				/>
-			</video>
-		</div>
-	</div>
+	<FileModal {videoId} {showModal} {setShowModal} />
 {/if}
