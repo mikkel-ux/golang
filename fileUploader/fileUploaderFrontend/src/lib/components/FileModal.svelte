@@ -1,6 +1,6 @@
 <script lang="ts">
 	let props = $props<{
-		videoId: string;
+		selectedFileId: { id: string; fileType: string } | null;
 		showModal: boolean;
 		setShowModal: (value: boolean) => void;
 	}>();
@@ -15,10 +15,10 @@
 	</button>
 	<div class="bg-white p-6 rounded-lg shadow-lg">
 		<video controls autoplay class="w-full h-auto">
-			<source src={`/api/video/${props.videoId}`} type="video/mp4" />
+			<source src={`/api/video/${props.selectedFileId?.id}`} type="video/mp4" />
 			<track
 				kind="captions"
-				src={`/api/video/${props.videoId}/captions.vtt`}
+				src={`/api/video/${props.selectedFileId?.id}/captions.vtt`}
 				srclang="en"
 				label="English"
 			/>

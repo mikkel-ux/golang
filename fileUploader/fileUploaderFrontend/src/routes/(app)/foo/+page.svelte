@@ -15,7 +15,7 @@
 	let filesArray = $state<file[]>([]);
 	let showModal = $state<boolean>(false);
 	let videoId = $state<string>('');
-	let selectedFileId = $state<string | null>(null);
+	let selectedFileId = $state<{ id: string; fileType: string } | null>(null);
 
 	onMount(() => {
 		socket = new WebSocket('ws://localhost:8080/ws');
@@ -170,6 +170,7 @@
 
 	const openVideoModal = async (file: file) => {
 		videoId = file.id;
+		selectedFileId = { id: file.id, fileType: file.fileType || '' };
 		showModal = true;
 	};
 
@@ -249,5 +250,5 @@
 	</div>
 </section>
 {#if showModal}
-	<FileModal {videoId} {showModal} {setShowModal} />
+	<FileModal {selectedFileId} {showModal} {setShowModal} />
 {/if}
