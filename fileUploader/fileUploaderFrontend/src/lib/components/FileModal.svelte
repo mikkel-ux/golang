@@ -1,9 +1,14 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	let props = $props<{
 		selectedFileId: { id: string; fileType: string } | null;
 		showModal: boolean;
 		setShowModal: (value: boolean) => void;
 	}>();
+
+	onMount(() => {
+		console.log('Selected File ID:', props.selectedFileId);
+	});
 </script>
 
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
