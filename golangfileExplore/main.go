@@ -13,6 +13,8 @@ import (
 var assets embed.FS
 
 func main() {
+	/* TODO implement settings check and create if settings don't exist */
+
 	// Create an instance of the app structure
 	app := NewApp()
 	sampleTest := test.NewSampleTest()
