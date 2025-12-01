@@ -12,7 +12,7 @@ import (
 type Settings struct {
 	PinnedDirs    []string `json:"pinnedDirs"`    // full paths
 	LastOpenedDir string   `json:"lastOpenedDir"` // sisdte åbnede dir
-	ViewMode      string   `json:"viewMode"`      // list or grid
+	ViewMode      string   `json:"viewMode"`      // list eller grid
 	SortBy        string   `json:"sortBy"`        // name, date, size, type
 }
 
