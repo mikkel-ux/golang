@@ -2,7 +2,11 @@ package settings
 
 import (
 	"encoding/json"
+	files "golangfileExplore/backend/files"
 	"os"
+	"path/filepath"
+
+	"github.com/adrg/xdg"
 )
 
 type Settings struct {
@@ -14,27 +18,43 @@ type Settings struct {
 
 var AppSettings Settings
 
-const SettingsFileName = "golangfileExplore_settings.json"
+const AppName = "GolangFileExplore"
+const SettingsFileName = "../../golangfileExplore_settings.json"
+
+func GetConfigFilePath() (string, error) {
+	configDir := filepath.Join(xdg.ConfigHome, AppName)
+	if err := os.MkdirAll(configDir, 0755); err != nil {
+		return "", err
+	}
+	return filepath.Join(configDir, "settings.json"), nil
+}
 
 func SaveSettings(settings *Settings) error {
+	filepath, err := GetConfigFilePath()
+	if err != nil {
+		return err
+	}
 	data, err := json.MarshalIndent(settings, "", "  ")
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(SettingsFileName, data, 0644)
+	return os.WriteFile(filepath, data, 0644)
 }
 
 func CheckAndCreateSettings() (*Settings, error) {
-	var settings Settings
-	_, err := os.ReadFile(SettingsFileName)
+	filePath, err := GetConfigFilePath()
 	if err != nil {
-		homeDir, err := os.UserHomeDir()
-		if err != nil {
-			homeDir = "/"
-		}
+		return nil, err
+	}
+
+	var settings Settings
+	_, err = os.Stat(filePath)
+	if os.IsNotExist(err) {
+		dirs := files.GetDefoultDir()
+
 		settings = Settings{
-			PinnedDirs:    []string{},
-			LastOpenedDir: homeDir,
+			PinnedDirs:    dirs,
+			LastOpenedDir: dirs[0],
 			ViewMode:      "list",
 			SortBy:        "name",
 		}
@@ -53,7 +73,12 @@ func CheckAndCreateSettings() (*Settings, error) {
 }
 
 func LoadSettings() (*Settings, error) {
-	data, err := os.ReadFile(SettingsFileName)
+	filePath, err := GetConfigFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
@@ -64,3 +89,30 @@ func LoadSettings() (*Settings, error) {
 	}
 	return &settings, nil
 }
+
+func GetSettings() *Settings {
+	return &AppSettings
+}
+
+/* data, err := settings.CheckAndCreateSettings()
+if err != nil {
+	println("Error checking/creating settings:", err.Error())
+	return
+} else {
+	settings.AppSettings = *data
+}
+println("Settings loaded:")
+for i, dir := range settings.AppSettings.PinnedDirs {
+	println("Pinned Dir", i, ":", dir)
+}
+println("Last Opened Dir:", settings.AppSettings.LastOpenedDir)
+println("View Mode:", settings.AppSettings.ViewMode)
+println("Sort By:", settings.AppSettings.SortBy)
+
+settings.AppSettings.PinnedDirs = append(settings.AppSettings.PinnedDirs, files.DefoultDirs[files.Pictures])
+*/
+/* err = settings.SaveSettings(&settings.AppSettings)
+if err != nil {
+	println("Error saving settings:", err.Error())
+	return
+} */
