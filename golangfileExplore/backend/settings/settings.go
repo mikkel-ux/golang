@@ -19,7 +19,6 @@ type Settings struct {
 var AppSettings Settings
 
 const AppName = "GolangFileExplore"
-const SettingsFileName = "../../golangfileExplore_settings.json"
 
 func GetConfigFilePath() (string, error) {
 	configDir := filepath.Join(xdg.ConfigHome, AppName)
