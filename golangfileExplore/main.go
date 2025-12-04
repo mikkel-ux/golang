@@ -4,6 +4,8 @@ import (
 	"embed"
 	"golangfileExplore/test"
 
+	settings "golangfileExplore/backend/settings"
+
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
@@ -14,13 +16,18 @@ var assets embed.FS
 
 func main() {
 	/* TODO implement settings check and create if settings don't exist */
-
+	data, err := settings.CheckAndCreateSettings()
+	if err != nil {
+		println("Error checking/creating settings:", err.Error())
+		return
+	}
+	settings.AppSettings = *data
 	// Create an instance of the app structure
 	app := NewApp()
 	sampleTest := test.NewSampleTest()
 
 	// Create application with options
-	err := wails.Run(&options.App{
+	err = wails.Run(&options.App{
 		Title:  "golangfileExplore",
 		Width:  1024,
 		Height: 768,
