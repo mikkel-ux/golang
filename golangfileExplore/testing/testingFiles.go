@@ -2,58 +2,42 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 func main() {
 	println(" ")
-	/* data, err := settings.CheckAndCreateSettings()
-	if err != nil {
-		println("Error checking/creating settings:", err.Error())
-		return
-	} else {
-		println(data.PinnedDirs[0])
-		println(" ")
-		for _, dir := range data.PinnedDirs {
-			println(dir)
-		}
-	} */
-	/* dirs := files.DefoultDirs
-	dir := dirs[files.Pictures] */
-	/* data, err := files.SearchForDirs("testa", dir)
-	if err != nil {
-		println("Error searching dirs:", err.Error())
-		return
-	}
-	for _, d := range data {
-		println(d)
-	} */
-	/* files.SearchForDirs("tasting", "testing") */
-	multiDimensionalSlice()
-}
+	input := "cat"
+	result := []EditDistanceReturn{}
+	targets := []string{"cut", "cot", "cast", "at", "acts", "cost", "scat", "cat"}
 
-func multiDimensionalArray() {
-	numbers := [2][3]int{{1, 2, 3}, {4, 5, 6}}
-	// value := numbers[0][1]
-	// println("Value: 1 ", value)
-	numbers[0][1] = 10
-	for i := range numbers {
-		for j := range numbers[i] {
-			println("Value:", i, j, numbers[i][j])
-		}
+	for _, target := range targets {
+		distance := LevenshteinDistance(input, target)
+		result = append(result, distance)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].distance < result[j].distance
+	})
+	for _, res := range result {
+		fmt.Printf("Edit distance between '%s' and '%s' is %d\n", input, res.target, res.distance)
 	}
 }
 
-func multiDimensionalSlice() {
-	str1 := "hat"
-	str2 := "can"
-	rows := 1 + len(str1)
-	col := 1 + len(str2)
-	slice := make([][]int, rows)
+type EditDistanceReturn struct {
+	target   string
+	distance int
+}
+
+func LevenshteinDistance(query, target string) EditDistanceReturn {
+	row := 1 + len(query)
+	col := 1 + len(target)
+	slice := make([][]int, row)
 	for i := range slice {
 		slice[i] = make([]int, col)
 	}
 
-	for i := range rows {
+	for i := range row {
 		slice[i][0] = i
 	}
 
@@ -61,9 +45,9 @@ func multiDimensionalSlice() {
 		slice[0][j] = j
 	}
 
-	for i := 1; i < rows; i++ {
+	for i := 1; i < row; i++ {
 		for j := 1; j < col; j++ {
-			if str1[i-1] == str2[j-1] {
+			if query[i-1] == target[j-1] {
 				slice[i][j] = slice[i-1][j-1]
 			} else {
 				replace := slice[i-1][j-1] + 1
@@ -73,13 +57,12 @@ func multiDimensionalSlice() {
 			}
 		}
 	}
-	println(str1)
-	println(str2)
-	editDistance := slice[rows-1][col-1]
-	fmt.Println("Edit Distance:", editDistance)
-
-	for i := range slice {
+	/* for i := range row {
 		fmt.Println(slice[i])
+	} */
+	return EditDistanceReturn{
+		target:   target,
+		distance: slice[row-1][col-1],
 	}
 }
 
