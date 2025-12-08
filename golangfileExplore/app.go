@@ -25,3 +25,19 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) Greet(name string) string {
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
+
+/* func (a *App) Minimize() {
+	runtime.WindowMinimise(a.ctx)
+}
+
+func (a *App) Maximize() {
+	runtime.WindowMaximise(a.ctx)
+}
+
+func (a *App) Unmaximize() {
+	runtime.WindowUnmaximise(a.ctx)
+}
+
+func (a *App) Close() {
+	runtime.Quit(a.ctx)
+} */
