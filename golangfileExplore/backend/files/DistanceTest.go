@@ -3,6 +3,9 @@ package files
 import (
 	"fmt"
 	"sort"
+
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 type DistanceTest struct{}
@@ -29,7 +32,6 @@ func (d *DistanceTest) DistanceTests(query string) []string {
 	}
 
 	sort.Slice(result, func(i, j int) bool {
-		/* return result[i].distance < result[j].distance */
 		return result[i].distance < result[j].distance
 	})
 
@@ -37,10 +39,19 @@ func (d *DistanceTest) DistanceTests(query string) []string {
 		return result[i].score > result[j].score
 	})
 
+	if query == "" {
+		c := collate.New(language.English, collate.Loose)
+		c.SortStrings(targets)
+		result = []EditDistanceReturn{}
+		for _, target := range targets {
+			result = append(result, EditDistanceReturn{target: target, distance: 0, score: 0})
+		}
+	}
+
 	returnValues := []string{}
 	for _, res := range result {
 		returnValues = append(returnValues,
-			fmt.Sprintf("Edit distance between '%s' and '%s' is %d", query, res.target, res.distance))
+			fmt.Sprintf("Edit distance between '%s' and '%s' is %d. score is %d", query, res.target, res.distance, res.score))
 	}
 
 	return returnValues
@@ -67,7 +78,6 @@ func LevenshteinDistance(query, target string) EditDistanceReturn {
 		for j := 1; j < col; j++ {
 			if query[i-1] == target[j-1] {
 				slice[i][j] = slice[i-1][j-1]
-				score++
 			} else {
 				replace := slice[i-1][j-1] + 1
 				dekete := slice[i-1][j] + 1
@@ -79,6 +89,13 @@ func LevenshteinDistance(query, target string) EditDistanceReturn {
 	/* for i := range row {
 		fmt.Println(slice[i], score)
 	} */
+
+	for i := 0; i < len(query) && i < len(target); i++ {
+		if query[i] == target[i] {
+			score += 1
+		}
+	}
+
 	if slice[row-1][col-1] > 10 {
 		return EditDistanceReturn{
 			target:   target,
