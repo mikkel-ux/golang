@@ -19,6 +19,7 @@ func main() {
 	sort.Slice(result, func(i, j int) bool {
 		return result[i].distance < result[j].distance
 	})
+
 	for _, res := range result {
 		fmt.Printf("Edit distance between '%s' and '%s' is %d\n", input, res.target, res.distance)
 	}

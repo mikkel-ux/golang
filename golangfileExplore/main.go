@@ -4,6 +4,7 @@ import (
 	"embed"
 	"golangfileExplore/test"
 
+	files "golangfileExplore/backend/files"
 	settings "golangfileExplore/backend/settings"
 
 	"github.com/wailsapp/wails/v2"
@@ -25,6 +26,7 @@ func main() {
 	// Create an instance of the app structure
 	app := NewApp()
 	sampleTest := test.NewSampleTest()
+	distanceTest := files.NewDistanceTest()
 
 	// Create application with options
 	err = wails.Run(&options.App{
@@ -39,7 +41,9 @@ func main() {
 		Bind: []interface{}{
 			app,
 			sampleTest,
+			distanceTest,
 		},
+		Logger: nil,
 	})
 
 	if err != nil {
