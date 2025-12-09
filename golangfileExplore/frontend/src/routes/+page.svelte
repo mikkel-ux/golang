@@ -25,22 +25,30 @@
 			Maximize();
 		}
 		isMaximized = !isMaximized;
+		console.log(isMaximized);
 	};
 </script>
 
 <div
 	class="h-8 w-full bg-black text-white flex items-center justify-between px-4"
-	style="--wails-draggable:drag"
+	style="--wails-draggable:{isMaximized ? 'no-drag' : 'drag'}"
 >
 	<span>golangfileExplore</span>
-	<div class="flex space-x-2">
-		<button onclick={() => Close()} class="w-4 h-4 bg-red-500 rounded-full" title="Close"></button>
-		<button onclick={() => Minimize()} class="w-4 h-4 bg-yellow-500 rounded-full" title="Minimize"
+	<div class="flex space-x-2" style="--wails-draggable:no-drag">
+		<button
+			onclick={() => Minimize()}
+			class="w-4 h-4 bg-yellow-500 rounded-full hover:bg-yellow-600"
+			title="Minimize"
 		></button>
 		<button
 			onclick={() => maximize()}
-			class="w-4 h-4 bg-green-500 rounded-full"
+			class="w-4 h-4 bg-green-500 rounded-full hover:bg-green-600"
 			title="Maximize/Unmaximize"
+		></button>
+		<button
+			onclick={() => Close()}
+			class="w-4 h-4 bg-red-500 rounded-full hover:bg-red-600"
+			title="Close"
 		></button>
 	</div>
 </div>
