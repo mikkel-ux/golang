@@ -6,6 +6,7 @@ import (
 
 	files "golangfileExplore/backend/files"
 	settings "golangfileExplore/backend/settings"
+	tabs "golangfileExplore/backend/tabs"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -28,6 +29,7 @@ func main() {
 	app := NewApp()
 	sampleTest := test.NewSampleTest()
 	distanceTest := files.NewDistanceTest()
+	tabsManager := tabs.NewTabsManager()
 
 	// Create application with options
 	err = wails.Run(&options.App{
@@ -50,6 +52,7 @@ func main() {
 			app,
 			sampleTest,
 			distanceTest,
+			tabsManager,
 		},
 		Logger: nil,
 	})

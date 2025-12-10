@@ -22,9 +22,9 @@
 	>
 		{#each tabs as tab}
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<div
 				class="flex items-cente rounded-md px-3 py-1 grow shrink min-w-[120px] max-w-60 hover:bg-gray-600"
-				class:selected={tab.id === activeTab}
 				class:bg-gray-800={tab.id === activeTab}
 				class:bg-gray-700={tab.id !== activeTab}
 				class:hover:bg-gray-900={tab.id === activeTab}
