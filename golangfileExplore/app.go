@@ -32,14 +32,15 @@ func (a *App) Minimize() {
 	runtime.WindowMinimise(a.ctx)
 }
 
-func (a *App) Maximize() {
-	runtime.WindowMaximise(a.ctx)
-}
-
-func (a *App) Unmaximize() {
-	runtime.WindowUnmaximise(a.ctx)
-}
-
 func (a *App) Close() {
 	runtime.Quit(a.ctx)
+}
+
+func (a *App) MaximizeUnmaximize() {
+	isMaximized := runtime.WindowIsMaximised(a.ctx)
+	if isMaximized {
+		runtime.WindowUnmaximise(a.ctx)
+	} else {
+		runtime.WindowMaximise(a.ctx)
+	}
 }

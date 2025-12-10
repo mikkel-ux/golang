@@ -10,14 +10,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
-export function Maximize() {
-  return window['go']['main']['App']['Maximize']();
+export function MaximizeUnmaximize() {
+  return window['go']['main']['App']['MaximizeUnmaximize']();
 }
 
 export function Minimize() {
   return window['go']['main']['App']['Minimize']();
-}
-
-export function Unmaximize() {
-  return window['go']['main']['App']['Unmaximize']();
 }
