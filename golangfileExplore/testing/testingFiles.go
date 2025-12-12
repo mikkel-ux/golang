@@ -1,13 +1,8 @@
 package main
 
-import (
-	"fmt"
-	"sort"
-)
-
 func main() {
 	println(" ")
-	input := "cat"
+	/* input := "cat"
 	result := []EditDistanceReturn{}
 	targets := []string{"cut", "cot", "cast", "at", "acts", "cost", "scat", "cat"}
 
@@ -22,10 +17,17 @@ func main() {
 
 	for _, res := range result {
 		fmt.Printf("Edit distance between '%s' and '%s' is %d\n", input, res.target, res.distance)
-	}
+	} */
+	/* tab := tabs.NewTab()
+	selectedTab, exists := tabs.SelectTab(tab.ID)
+	if exists {
+		fmt.Printf("Selected tab with ID: %s, Title: %s\n", selectedTab.ID, selectedTab.Title)
+	} else {
+		fmt.Println("Tab not found")
+	} */
 }
 
-type EditDistanceReturn struct {
+/* type EditDistanceReturn struct {
 	target   string
 	distance int
 }
@@ -58,9 +60,7 @@ func LevenshteinDistance(query, target string) EditDistanceReturn {
 			}
 		}
 	}
-	/* for i := range row {
-		fmt.Println(slice[i])
-	} */
+	// for i := range row { fmt.Println(slice[i]) }
 	return EditDistanceReturn{
 		target:   target,
 		distance: slice[row-1][col-1],
@@ -75,4 +75,4 @@ func min(a, b, c int) int {
 		return b
 	}
 	return c
-}
+} */

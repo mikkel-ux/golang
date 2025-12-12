@@ -17,6 +17,8 @@
 	});
 </script>
 
+<a href="/test">test page</a>
+
 <input type="text" bind:value={inputText} />
 
 {#each results as result}
