@@ -36,6 +36,7 @@ func SearchForDirs(query string, dir string) {
 
 }
 
+/* LevenshteinDistance */
 func editDistance(query, dir string) int {
 	rows := len(query) + 1
 	cols := len(dir) + 1
