@@ -1,0 +1,49 @@
+let box1 = $state<string[]>(['item 1', 'item 2', 'item 3']);
+	let box2 = $state<string[]>([]);
+	let itemIndex = $state((item: string) => box2.indexOf(item));
+
+	function handleDragStart(event: DragEvent | null, item: string) {
+		event?.dataTransfer?.setData('text/plain', item);
+	}
+
+	function handleDrop(event: DragEvent | null, index: number) {
+		event?.preventDefault();
+		const item: string | null = event?.dataTransfer?.getData('text/plain') ?? null;
+		if (item !== null) {
+			box2 = [...box2, item];
+			box2.splice(itemIndex(item), 1);
+			box2.splice(index, 0, item);
+		}
+	}
+
+	function handleDragOver(event: DragEvent | null) {
+		event?.preventDefault();
+	}
+
+
+<section class="w-full h-full flex flex-row gap-4">
+	<div class="drag-grid flex-1 border-4">
+		{#each box1 as item (item)}
+			<div
+				class="p-4 m-2 bg-gray-700 text-white rounded"
+				draggable="true"
+				ondragstart={(event) => handleDragStart(event, item)}
+				role="none"
+			>
+				{item}
+			</div>
+		{/each}
+	</div>
+	<div class="drag-grid flex-1 border-4" ondragover={handleDragOver} role="none">
+		{#each box2 as item, index}
+			<div
+				class="p-4 m-2 bg-gray-700 text-white rounded"
+				ondrop={(event) => handleDrop(event, index)}
+				role="none"
+			>
+				{item}
+			</div>
+		{/each}
+	</div>
+</section>
+--------------------------------------------------------------------------------

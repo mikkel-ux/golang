@@ -30,9 +30,16 @@
 		"prettier-plugin-svelte": "^3.4.0",
 		"svelte": "^5.43.8",
 		"svelte-check": "^4.3.4",
+		"svelte-dnd-action": "^0.9.69",
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.47.0",
 		"vite": "^7.2.2"
+	},
+	"dependencies": {
+		"@dnd-kit-svelte/svelte": "^0.1.5",
+		"@neodrag/svelte": "^3.0.0-next.8",
+		"@thisux/sveltednd": "^0.0.20",
+		"muuri": "^0.9.5"
 	}
 }
