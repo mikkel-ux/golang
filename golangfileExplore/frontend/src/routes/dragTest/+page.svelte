@@ -1,69 +1,45 @@
 <script lang="ts">
+	type Item = {
+		id: number;
+		name: string;
+	};
 	import { flip } from 'svelte/animate';
-	let box1 = $state<string[]>(['item 1', 'item 2', 'item 3']);
-	let previewItems = $state<string[]>([]);
-	let draggedItemIndex: number = $state(-1);
-	let draggedOverItemIndex: number = $state(-1);
+	let box1 = $state<Item[]>([
+		{ id: 1, name: 'item 1' },
+		{ id: 2, name: 'item 2' },
+		{ id: 3, name: 'item 3' }
+	]);
+	// svelte-ignore state_referenced_locally
+	let preview = $state<Item[]>(box1);
+	let draggedId: number = $state(0);
 
-	const preview = $derived(() => {
-		if (
-			draggedItemIndex === -1 ||
-			draggedOverItemIndex === -1 ||
-			draggedItemIndex === draggedOverItemIndex
-		) {
-			return box1;
-		}
-		const updated = [...box1];
-		const [moved] = updated.splice(draggedItemIndex, 1);
-		updated.splice(draggedOverItemIndex, 0, moved);
-		return updated;
-	});
-
-	function handleDragStart(event: DragEvent | null, item: string, index: number) {
+	function handleDragStart(event: DragEvent | null, id: number) {
 		if (!event?.dataTransfer) return;
-		event.dataTransfer.setData('text/plain', item);
-		draggedItemIndex = index;
+		event.dataTransfer.setData('text/plain', '');
+		draggedId = id;
+		preview = box1;
 	}
 
-	/* function createTempDiv(event: DragEvent | null, index: number) {
-		if (!event) return;
-		const original = event.currentTarget as HTMLElement;
-
-		const ghost = original.cloneNode(true) as HTMLElement;
-
-		ghost.style.position = 'absolute';
-		ghost.style.top = '-9999px';
-		ghost.style.left = '-9999px';
-		ghost.style.opacity = '0.5';
-
-		document.body.appendChild(ghost);
-
-		event.dataTransfer?.setDragImage(ghost, 30, 30);
-
-		requestAnimationFrame(() => {
-			document.body.removeChild(ghost);
-		});
-	} */
-
-	function swap(indexA: number, indexB: number) {
-		const temp = box1[indexA];
-		box1[indexA] = box1[indexB];
-		box1[indexB] = temp;
-	}
-
-	function handleDragOver(event: DragEvent | null, index: number) {
+	function handleDragOver(event: DragEvent | null, overId: number) {
 		if (!event) return;
 		event.preventDefault();
-		draggedOverItemIndex = index;
+		if (draggedId === 0 || draggedId === overId) return;
+
+		const from = preview.findIndex((item) => item.id === draggedId);
+		const to = preview.findIndex((item) => item.id === overId);
+
+		if (from === -1 || to === -1) return;
+
+		const updated = [...preview];
+		const [moved] = updated.splice(from, 1);
+		updated.splice(to, 0, moved);
+		preview = updated;
 	}
 
 	function handleDrop(event: DragEvent | null) {
 		if (!event) return;
-		if (preview() !== box1) {
-			box1 = preview();
-		}
-		draggedItemIndex = -1;
-		draggedOverItemIndex = -1;
+		box1 = preview;
+		draggedId = 0;
 	}
 </script>
 
@@ -73,26 +49,17 @@
 
 <section class="w-full h-full flex flex-row gap-4">
 	<div class="drag-grid flex-1 border-4" role="none" ondrop={handleDrop}>
-		{#each preview() as item, index (item)}
+		{#each preview as item (item)}
 			<div
 				class="p-4 m-2 bg-gray-700 text-white rounded"
 				draggable="true"
-				ondragover={(event) => handleDragOver(event, index)}
-				ondragstart={(event) => handleDragStart(event, item, index)}
+				ondragover={(event) => handleDragOver(event, item.id)}
+				ondragstart={(event) => handleDragStart(event, item.id)}
 				role="none"
-				animate:flip
+				animate:flip={{ duration: 150 }}
 			>
-				<!-- {#if index !== DraggedItemIndex}
-					{item}
-				{/if} -->
-				{item}
+				{item.name}
 			</div>
 		{/each}
 	</div>
 </section>
-
-<!-- <style>
-	.hidden {
-		display: none;
-	}
-</style> -->
