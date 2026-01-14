@@ -1,46 +1,17 @@
 <script lang="ts">
-	type Item = {
-		id: number;
-		name: string;
-	};
+	import type { Item } from '$lib/types/types';
 	import { flip } from 'svelte/animate';
+	import DragList from './DragList.svelte';
 	let box1 = $state<Item[]>([
 		{ id: 1, name: 'item 1' },
 		{ id: 2, name: 'item 2' },
 		{ id: 3, name: 'item 3' }
 	]);
-	// svelte-ignore state_referenced_locally
-	let preview = $state<Item[]>(box1);
-	let draggedId: number = $state(0);
-
-	function handleDragStart(event: DragEvent | null, id: number) {
-		if (!event?.dataTransfer) return;
-		event.dataTransfer.setData('text/plain', '');
-		draggedId = id;
-		preview = box1;
-	}
-
-	function handleDragOver(event: DragEvent | null, overId: number) {
-		if (!event) return;
-		event.preventDefault();
-		if (draggedId === 0 || draggedId === overId) return;
-
-		const from = preview.findIndex((item) => item.id === draggedId);
-		const to = preview.findIndex((item) => item.id === overId);
-
-		if (from === -1 || to === -1) return;
-
-		const updated = [...preview];
-		const [moved] = updated.splice(from, 1);
-		updated.splice(to, 0, moved);
-		preview = updated;
-	}
-
-	function handleDrop(event: DragEvent | null) {
-		if (!event) return;
-		box1 = preview;
-		draggedId = 0;
-	}
+	let box2 = $state<Item[]>([
+		{ id: 4, name: 'item 4' },
+		{ id: 5, name: 'item 5' },
+		{ id: 6, name: 'item 6' }
+	]);
 </script>
 
 <!-- <div>
@@ -48,18 +19,46 @@
 </div> -->
 
 <section class="w-full h-full flex flex-row gap-4">
-	<div class="drag-grid flex-1 border-4" role="none" ondrop={handleDrop}>
-		{#each preview as item (item)}
-			<div
-				class="p-4 m-2 bg-gray-700 text-white rounded"
-				draggable="true"
-				ondragover={(event) => handleDragOver(event, item.id)}
-				ondragstart={(event) => handleDragStart(event, item.id)}
-				role="none"
-				animate:flip={{ duration: 150 }}
-			>
-				{item.name}
+	<DragList bind:items={box1}>
+		{#snippet children({ items, dragState, dragstart, dragover, dragend, drop })}
+			<div ondrop={drop} role="none" class="drag-grid flex-1 border-4">
+				{#each items as item, index (item)}
+					<div
+						class="p-4 m-2 bg-gray-700 text-white rounded"
+						class:opacity-50={index === dragState.draggedIndex}
+						class:border-4={index === dragState.drappedOverIndex}
+						draggable="true"
+						ondragover={(event) => dragover(event, index)}
+						ondragstart={(event) => dragstart(event, index)}
+						ondragend={dragend}
+						role="none"
+						animate:flip={{ duration: 350 }}
+					>
+						{item.name}
+					</div>
+				{/each}
 			</div>
-		{/each}
-	</div>
+		{/snippet}
+	</DragList>
+	<DragList bind:items={box2}>
+		{#snippet children({ items, dragState, dragstart, dragover, dragend, drop })}
+			<div ondrop={drop} role="none" class="drag-grid flex-1 border-4">
+				{#each items as item, index (item)}
+					<div
+						class="p-4 m-2 bg-gray-700 text-white rounded"
+						class:opacity-50={index === dragState.draggedIndex}
+						class:border-4={index === dragState.drappedOverIndex}
+						draggable="true"
+						ondragover={(event) => dragover(event, index)}
+						ondragstart={(event) => dragstart(event, index)}
+						ondragend={dragend}
+						role="none"
+						animate:flip={{ duration: 350 }}
+					>
+						{item.name}
+					</div>
+				{/each}
+			</div>
+		{/snippet}
+	</DragList>
 </section>
