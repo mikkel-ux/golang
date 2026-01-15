@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Item } from '$lib/types/types';
-	import { flip } from 'svelte/animate';
 	import type { Snippet } from 'svelte';
 
 	type DragListRenderProps = {
@@ -13,6 +12,8 @@
 		dragstart: typeof handleDragStart;
 		dragover: typeof handleDragOver;
 		dragend: typeof handleDragEnd;
+		dragLeave: typeof dragLeave;
+		dragEnter: typeof dragEnter;
 	};
 
 	let {
@@ -28,7 +29,8 @@
 
 	function handleDragStart(event: DragEvent | null, index: number) {
 		if (!event?.dataTransfer) return;
-		event.dataTransfer.setData('text/plain', '');
+		event.dataTransfer.setData('text/plain', index.toString());
+		/* event.dataTransfer.setDragImage(new Image(), 0, 0); */
 		draggedIndex = index;
 	}
 
@@ -60,22 +62,28 @@
 		draggedIndex = -1;
 		drappedOverIndex = -1;
 	}
+
+	function dragLeave(event: DragEvent | null) {
+		if (!event) return;
+		event.preventDefault();
+		drappedOverIndex = -1;
+		console.log('drag leave');
+	}
+
+	function dragEnter(event: DragEvent | null) {
+		if (!event) return;
+		event.preventDefault();
+		console.log('drag enter');
+	}
 </script>
 
-<!-- <div ondrop={handleDrop} role="none"> -->
-<!-- <slot
-		{items}
-		dragState={{ draggedIndex, drappedOverIndex }}
-		dragstart={handleDragStart}
-		dragover={handleDragOver}
-		dragend={handleDragEnd}
-	/> -->
 {@render children?.({
 	items,
 	drop: handleDrop,
 	dragState: { draggedIndex, drappedOverIndex },
 	dragstart: handleDragStart,
 	dragover: handleDragOver,
-	dragend: handleDragEnd
+	dragend: handleDragEnd,
+	dragLeave: dragLeave,
+	dragEnter: dragEnter
 })}
-<!-- </div> -->
