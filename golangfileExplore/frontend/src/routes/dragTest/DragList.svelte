@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Item } from '$lib/types/types';
 	import type { Snippet } from 'svelte';
+	import { dragContext } from './dragContext';
 
 	type DragListRenderProps = {
 		items: Item[];
@@ -17,9 +18,11 @@
 	};
 
 	let {
+		id,
 		items = $bindable<Item[]>(),
 		children
 	}: {
+		id: string;
 		items?: Item[];
 		children?: Snippet<[DragListRenderProps]>;
 	} = $props();
@@ -28,7 +31,12 @@
 	let draggedIndex: number = $state(-1);
 
 	function handleDragStart(event: DragEvent | null, index: number) {
-		if (!event?.dataTransfer) return;
+		if (!event?.dataTransfer || !items) return;
+
+		dragContext.sourceId = id;
+		dragContext.item = items[index];
+		dragContext.sourceIndex = index;
+
 		event.dataTransfer.setData('text/plain', index.toString());
 		/* event.dataTransfer.setDragImage(new Image(), 0, 0); */
 		draggedIndex = index;
@@ -53,12 +61,33 @@
 
 	function handleDrop(event: DragEvent | null) {
 		if (!event) return;
-		if (draggedIndex === -1 || drappedOverIndex === -1) return;
-		swap(draggedIndex, drappedOverIndex);
+		if (!dragContext.item) return;
+		console.log(dragContext);
+
+		if (dragContext.sourceId === id) {
+			if (draggedIndex === -1 || drappedOverIndex === -1) return;
+			swap(draggedIndex, drappedOverIndex);
+		} else {
+			const incomingItem = dragContext.item;
+			const next = items.slice();
+			next.splice(drappedOverIndex, 0, incomingItem);
+			items = next;
+			dragContext.item = null;
+		}
 		handleDragEnd();
 	}
 
 	function handleDragEnd() {
+		dragContext.sourceId = null;
+		dragContext.sourceIndex = -1;
+		dragContext.item = null;
+
+		if (dragContext.sourceId === id) {
+			const next = items.slice();
+			next.splice(dragContext.sourceIndex, 1);
+			items = next;
+		}
+
 		draggedIndex = -1;
 		drappedOverIndex = -1;
 	}

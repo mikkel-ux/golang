@@ -19,7 +19,7 @@
 </div> -->
 
 <section class="w-full h-full flex flex-row gap-4">
-	<DragList bind:items={box1}>
+	<DragList id="box1" bind:items={box1}>
 		{#snippet children({
 			items,
 			dragState,
@@ -55,7 +55,7 @@
 			</div>
 		{/snippet}
 	</DragList>
-	<DragList bind:items={box2}>
+	<DragList id="box2" bind:items={box2}>
 		{#snippet children({
 			items,
 			dragState,
@@ -76,6 +76,8 @@
 						ondragover={(event) => dragover(event, index)}
 						ondragstart={(event) => dragstart(event, index)}
 						ondragend={dragend}
+						ondragleave={dragLeave}
+						ondragenter={dragEnter}
 						role="none"
 						animate:flip={{ duration: 350 }}
 					>
