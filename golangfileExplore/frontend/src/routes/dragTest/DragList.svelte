@@ -38,7 +38,6 @@
 		dragContext.sourceIndex = index;
 
 		event.dataTransfer.setData('text/plain', index.toString());
-		/* event.dataTransfer.setDragImage(new Image(), 0, 0); */
 		draggedIndex = index;
 	}
 

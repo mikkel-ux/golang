@@ -19,6 +19,7 @@
 
 <a class="text-white" href="/test">test page</a> <br />
 <a class="text-white" href="/dragTest">drag test page</a>
+<h1 class="text-white"><a href="/dragTestAction">action test</a></h1>
 <br />
 <input type="text" bind:value={inputText} />
 
